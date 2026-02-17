@@ -210,18 +210,21 @@
     </div>
 
     <script>
-        const apiKey = ""; 
+        // 중요: 본인의 Gemini API 키를 적용하였습니다.
+        const apiKey = "AIzaSyCYvh4JPmjVSwwqGloYMKMK1MrgRUeGDOk"; 
+        
         let currentTarget = null;
         let searchMode = 'out';
         
-        let favorites = JSON.parse(localStorage.getItem('guri_mama_v15') || '[]');
-        let routeCache = JSON.parse(localStorage.getItem('guri_route_cache_v15') || '{}');
+        let favorites = JSON.parse(localStorage.getItem('guri_mama_v16') || '[]');
+        let routeCache = JSON.parse(localStorage.getItem('guri_route_cache_v16') || '{}');
 
-        // 주요 역 목록 (추천용)
+        // 주요 역 목록 (추천용) - 노선도에 있는 주요 역들을 더 많이 추가
         const commonStations = [
             "잠실역", "서울역", "강남역", "천호역", "다산역", "별내역", "왕십리역", "청량리역", "명동역", 
             "홍대입구역", "고속터미널역", "신도림역", "동대문역", "건대입구역", "가락시장역", "복정역", 
-            "석촌역", "종로3가역", "을지로입구역", "신촌역", "수원역", "인천역", "동탄역", "판교역", "상봉역", "도농역"
+            "석촌역", "종로3가역", "을지로입구역", "신촌역", "수원역", "인천역", "동탄역", "판교역", 
+            "상봉역", "도농역", "덕소역", "양평역", "회기역", "옥수역", "금정역", "노원역", "장자호수공원역"
         ];
 
         function formatStationName(name) {
@@ -255,15 +258,15 @@
             container.innerHTML = '';
             
             if (query.length > 0) {
-                // 1. "새로 찾기" 버튼 (입력한 값 그대로)
+                // 1. "직접 찾기" 버튼
                 const mainBtn = document.createElement('button');
                 mainBtn.className = "w-full bg-blue-50 border-2 border-blue-300 p-5 rounded-2xl text-left shadow-sm flex justify-between items-center mb-6";
                 mainBtn.onclick = () => findRoute(query);
                 mainBtn.innerHTML = `<span class="text-xl font-bold text-blue-900">'${formatStationName(query)}' 길찾기</span> <span class="text-2xl">🔍</span>`;
                 container.appendChild(mainBtn);
 
-                // 2. 입력값 기반 추천 목록
-                const matches = commonStations.filter(s => s.includes(query) && formatStationName(s) !== formatStationName(query));
+                // 2. 실시간 추천 목록 (입력한 글자가 포함된 역들)
+                const matches = commonStations.filter(s => s.includes(query));
                 if (matches.length > 0) {
                     const label = document.createElement('p');
                     label.className = "text-sm text-gray-500 mb-2 ml-1 font-bold";
@@ -279,13 +282,13 @@
                     });
                 }
             } else {
-                // 검색어가 없을 때 보여줄 기본 목록
+                // 검색어가 없을 때 보여줄 기본 인기 역 목록
                 const recentLabel = document.createElement('p');
                 recentLabel.className = "text-sm text-gray-500 mb-3 ml-1 font-bold";
-                recentLabel.innerText = "가실 곳을 입력하거나 선택하세요";
+                recentLabel.innerText = "가실 곳을 선택하거나 이름을 쓰세요";
                 container.appendChild(recentLabel);
 
-                commonStations.slice(0, 10).forEach(name => {
+                commonStations.slice(0, 12).forEach(name => {
                     const btn = document.createElement('button');
                     btn.className = "w-full bg-white border-2 border-gray-100 p-4 rounded-xl text-left shadow-sm mb-2 active:bg-gray-50";
                     btn.onclick = () => findRoute(name);
@@ -297,17 +300,17 @@
 
         async function fetchRouteWithRetry(start, end, maxRetries = 5) {
             const delays = [1000, 2000, 4000, 8000, 16000];
-            const systemPrompt = `서울 지하철 안내 전문가입니다. 80대 어머니를 위해 아주 쉽고 간결하게 답하세요.
+            const systemPrompt = `지하철 안내 전문가입니다. 80대 어머니를 위해 중복 단어를 빼고 아주 간결하게 답하세요.
             반드시 다음 JSON 형식으로만 응답하세요:
             {
                 "path": ["출발역", "환승역(있는경우)", "도착역"],
                 "steps": [
                     {"type": "ride", "station": "출발역", "line": "8", "color": "line-8", "msg": "8호선(모란행) 타세요."},
-                    {"type": "transfer", "station": "환승역", "line": "2", "color": "line-2", "pos": "3-1번", "msg": "내려서 2호선(교대방향)으로 갈아타세요."},
-                    {"type": "arrive", "station": "도착역", "msg": "도착했습니다. 여기서 내리세요."}
+                    {"type": "transfer", "station": "환승역", "line": "2", "color": "line-2", "pos": "3-1번", "msg": "내려서 2호선(교대방향) 갈아타세요."},
+                    {"type": "arrive", "station": "도착역", "msg": "여기서 내리세요."}
                 ]
             }
-            규칙: msg에 역 이름을 중복하지 마세요. 행동 위주로 쓰세요.`;
+            규칙: msg 안에는 역 이름을 다시 쓰지 마세요. 환승 단계에만 '내려서'를 쓰고 뒤에 행선지를 꼭 쓰세요.`;
 
             for (let i = 0; i < maxRetries; i++) {
                 try {
@@ -315,23 +318,30 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: `${start}에서 ${end}까지 가는 법 알려줘` }] }],
+                            contents: [{ parts: [{ text: `${start}에서 ${end}까지 지하철로 가는 법` }] }],
                             systemInstruction: { parts: [{ text: systemPrompt }] },
                             generationConfig: { responseMimeType: "application/json" }
                         })
                     });
 
-                    if (!response.ok) throw new Error(`네트워크 오류: ${response.status}`);
+                    if (response.status === 403 || response.status === 401) {
+                        throw new Error("API 키가 잘못되었거나 설정되지 않았습니다.");
+                    }
+
+                    if (!response.ok) throw new Error(`서버 오류 (${response.status})`);
 
                     const result = await response.json();
                     const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (!rawText) throw new Error("응답 데이터가 없습니다.");
+                    if (!rawText) throw new Error("답변 데이터가 비어있습니다.");
                     
+                    // JSON만 정교하게 추출
                     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-                    if (!jsonMatch) throw new Error("데이터 파싱 실패");
+                    if (!jsonMatch) throw new Error("데이터 형식이 올바르지 않습니다.");
                     
                     return JSON.parse(jsonMatch[0]);
                 } catch (err) {
+                    console.error(`시도 ${i+1} 실패:`, err);
+                    if (err.message.includes("API 키")) throw err;
                     if (i === maxRetries - 1) throw err;
                     await new Promise(r => setTimeout(r, delays[i]));
                 }
@@ -357,11 +367,15 @@
             try {
                 const route = await fetchRouteWithRetry(start, end);
                 routeCache[cacheKey] = route;
-                localStorage.setItem('guri_route_cache_v15', JSON.stringify(routeCache));
+                localStorage.setItem('guri_route_cache_v16', JSON.stringify(routeCache));
                 renderRoute(route, targetStation);
             } catch (error) {
-                console.error("길찾기 오류:", error);
-                showMessage("연결이 원활하지 않습니다. 잠시 후 다시 시도하시거나 지도를 확인해주세요.");
+                console.error("최종 길찾기 오류:", error);
+                if (error.message.includes("API 키")) {
+                    showMessage("프로그램 설정(API 키)이 필요합니다. Vercel 배포 가이드를 확인해 주세요.");
+                } else {
+                    showMessage("연결이 불안정합니다. 잠시 후 다시 시도하시거나 지도를 확인해주세요.");
+                }
             } finally {
                 document.getElementById('loading').classList.add('hidden');
             }
@@ -384,7 +398,7 @@
                 if (step.type === 'transfer') {
                     msgHtml = msgHtml.replace("내려서", "<span class='highlight-action'>내려서</span>").replace("갈아타세요", "<span class='highlight-action'>갈아타세요</span>");
                 } else if (step.type === 'arrive' || step.msg.includes("내리세요")) {
-                    msgHtml = msgHtml.replace("내리세요", "<span class='highlight-action'>내리세요</span>").replace("내리시면", "<span class='highlight-action'>내리시면</span>");
+                    msgHtml = msgHtml.replace("내리세요", "<span class='highlight-action'>내리세요</span>");
                 }
 
                 return `
@@ -397,8 +411,8 @@
                         </div>
                         <p class="action-text">${msgHtml}</p>
                         ${step.pos ? `
-                        <div class="inline-block mt-1 bg-green-50 px-3 py-1 rounded-lg border border-green-200 shadow-sm">
-                            <p class="text-sm font-bold text-green-800">💡 빨리 갈아타는 칸: <span class="text-red-600 underline">${step.pos}</span></p>
+                        <div class="inline-block mt-1 bg-green-50 px-2 py-0.5 rounded-lg border border-green-200 shadow-sm">
+                            <p class="text-xs font-bold text-green-800">💡 빨리 갈아타는 칸: <span class="text-red-600 underline">${step.pos}</span></p>
                         </div>` : ''}
                     </div>
                 </div>`;
@@ -411,7 +425,7 @@
             const index = favorites.findIndex(f => f.name === currentTarget.name);
             if (index > -1) favorites.splice(index, 1);
             else favorites.push(currentTarget);
-            localStorage.setItem('guri_mama_v15', JSON.stringify(favorites));
+            localStorage.setItem('guri_mama_v16', JSON.stringify(favorites));
             updateFavoriteStar();
         }
 
