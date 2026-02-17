@@ -3,164 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>어머니를 위한 지하철 도우미</title>
+    <title>어머니를 위한 구리역 지하철 도우미</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap');
         
         body {
             font-family: 'Nanum+Gothic', sans-serif;
-            background-color: #f0f4f8;
+            background-color: #f8fafc;
             -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+            font-size: 1.25rem;
         }
         
         .big-button {
             transition: transform 0.1s active;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
         }
         
         .big-button:active {
-            transform: scale(0.98);
+            transform: scale(0.96);
         }
 
-        /* 호선별 색상 정의 */
-        .line-1 { background-color: #0052A4; }
-        .line-2 { background-color: #009D3E; }
-        .line-3 { background-color: #EF7C1C; }
-        .line-4 { background-color: #00A5DE; }
-        .line-5 { background-color: #996CAC; }
-        .line-6 { background-color: #CD7C2F; }
-        .line-7 { background-color: #747F00; }
-        .line-8 { background-color: #E6186C; }
-        .line-9 { background-color: #BDB092; }
-        .line-gj { background-color: #77C4A3; } /* 경의중앙 */
-        .line-suin { background-color: #F5A200; } /* 수인분당 */
-        .line-shin { background-color: #D4003B; } /* 신분당 */
-        .line-gyeongchun { background-color: #0C8E72; } /* 경춘 */
+        /* 노선별 대표 색상 */
+        .line-1 { background-color: #0052A4; } .line-2 { background-color: #009D3E; }
+        .line-3 { background-color: #EF7C1C; } .line-4 { background-color: #00A5DE; }
+        .line-5 { background-color: #996CAC; } .line-6 { background-color: #CD7C2F; }
+        .line-7 { background-color: #747F00; } .line-8 { background-color: #e6186c; }
+        .line-9 { background-color: #BDB092; } .line-gj { background-color: #77c4a3; }
+        .line-suin { background-color: #F5A200; } .line-shin { background-color: #D4003B; }
+        .line-gc { background-color: #0C8E72; } .line-gtx { background-color: #A6142F; }
+        .line-default { background-color: #64748b; }
 
         .station-badge {
             display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
+            padding: 4px 14px;
+            border-radius: 20px;
             color: white;
-            font-weight: bold;
-            font-size: 1rem;
+            font-weight: 800;
+            font-size: 1.1rem;
         }
 
-        /* 검색 자동완성 목록 스타일 */
-        #search-results {
-            max-height: 300px;
-            overflow-y: auto;
+        #map-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 100;
+            overflow: auto;
+        }
+
+        .highlight-red {
+            color: #dc2626;
+            font-weight: 900;
+            font-size: 1.6rem;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+        }
+
+        /* 어르신용 큰 입력창 */
+        #station-input {
+            font-size: 2rem;
+            line-height: 1.5;
         }
     </style>
 </head>
-<body class="max-w-md mx-auto min-h-screen bg-gray-50 pb-10">
+<body class="max-w-md mx-auto min-h-screen bg-gray-50 pb-20">
 
-    <!-- 헤더 -->
-    <header class="bg-blue-600 text-white p-6 text-center shadow-lg sticky top-0 z-50">
-        <h1 class="text-3xl font-black mb-1">지하철 도우미</h1>
-        <p class="text-lg opacity-90" id="header-subtitle">어머니, 즐거운 나들이 되세요!</p>
+    <header class="bg-blue-600 text-white p-8 text-center shadow-xl">
+        <h1 class="text-4xl font-black mb-2">지하철 도우미</h1>
+        <p class="text-2xl opacity-90 font-bold">어머니, 어디로 모실까요?</p>
     </header>
 
-    <main class="p-4 space-y-6" id="app">
+    <main class="p-4 space-y-8">
         <!-- 메인 메뉴 -->
-        <div id="main-menu" class="space-y-6 pt-2">
-            <!-- 즐겨찾기 섹션 -->
-            <div id="favorites-section" class="hidden">
-                <h2 class="text-2xl font-black text-gray-700 mb-3 ml-1">⭐ 자주 가시는 곳</h2>
-                <div id="favorites-list" class="space-y-3">
-                    <!-- 즐겨찾기 아이템이 여기에 추가됨 -->
+        <div id="main-menu" class="space-y-6 pt-4">
+            <button onclick="openSearch('out')" class="big-button w-full bg-white border-4 border-blue-500 rounded-[2.5rem] p-8 text-left flex items-center justify-between">
+                <div>
+                    <span class="text-gray-500 text-2xl block mb-2 font-bold">집에서 나갈 때</span>
+                    <span class="text-4xl font-black text-gray-800">구리역에서 출발</span>
                 </div>
-            </div>
-
-            <!-- 기본 버튼 -->
-            <div class="space-y-4">
-                <h2 class="text-2xl font-black text-gray-700 mb-3 ml-1">🔍 역 찾기</h2>
-                <button onclick="openSearch('departure')" class="big-button w-full bg-white border-4 border-blue-500 rounded-3xl p-6 text-left flex items-center justify-between">
-                    <div>
-                        <span class="text-gray-500 text-xl block">출발역</span>
-                        <span id="dep-display" class="text-3xl font-extrabold text-blue-700">구리역</span>
-                    </div>
-                    <span class="text-4xl">🚩</span>
-                </button>
-
-                <button onclick="openSearch('arrival')" class="big-button w-full bg-white border-4 border-green-500 rounded-3xl p-6 text-left flex items-center justify-between">
-                    <div>
-                        <span class="text-gray-500 text-xl block">도착역</span>
-                        <span id="arr-display" class="text-3xl font-extrabold text-gray-400 font-normal">어디로 가세요?</span>
-                    </div>
-                    <span class="text-4xl">📍</span>
-                </button>
-            </div>
-
-            <button id="find-route-btn" onclick="showRouteDetails()" disabled class="w-full bg-gray-300 text-white py-6 rounded-3xl text-3xl font-black shadow-lg">
-                길 찾기 시작
+                <span class="text-6xl">🏠</span>
             </button>
+
+            <button onclick="openSearch('in')" class="big-button w-full bg-white border-4 border-green-500 rounded-[2.5rem] p-8 text-left flex items-center justify-between">
+                <div>
+                    <span class="text-gray-500 text-2xl block mb-2 font-bold">집으로 돌아올 때</span>
+                    <span class="text-4xl font-black text-gray-800">구리역으로 가기</span>
+                </div>
+                <span class="text-6xl">🚉</span>
+            </button>
+
+            <button onclick="toggleMap(true)" class="big-button w-full bg-orange-400 border-4 border-orange-600 rounded-[2rem] p-6 text-center shadow-lg">
+                <span class="text-3xl font-black text-white">🗺️ 전체 노선도 보기</span>
+            </button>
+
+            <!-- 즐겨찾기 -->
+            <div id="favorites-section" class="hidden mt-8">
+                <h2 class="text-3xl font-black text-gray-700 mb-4 ml-2">⭐ 자주 가는 곳</h2>
+                <div id="favorites-list" class="space-y-4"></div>
+            </div>
         </div>
 
-        <!-- 검색 화면 (전체화면 오버레이 느낌) -->
-        <div id="search-view" class="hidden fixed inset-0 bg-white z-[60] p-4 flex flex-col">
-            <div class="flex items-center gap-4 mb-4">
-                <button onclick="closeSearch()" class="text-4xl p-2">✕</button>
-                <h2 id="search-title" class="text-2xl font-black">역 이름 검색</h2>
+        <!-- 검색 화면 -->
+        <div id="search-view" class="hidden fixed inset-0 bg-white z-[60] p-6 flex flex-col">
+            <div class="flex items-center justify-between mb-6">
+                <h2 id="search-title" class="text-3xl font-black text-blue-700">가실 곳 입력</h2>
+                <button onclick="closeSearch()" class="text-5xl font-bold p-2 text-gray-400">✕</button>
             </div>
             
-            <input type="text" id="station-input" oninput="filterStations(this.value)" placeholder="예: 잠실, 서울역" 
-                   class="w-full border-4 border-blue-400 rounded-2xl p-5 text-3xl font-bold focus:outline-none focus:border-blue-600 mb-4">
+            <div class="relative mb-6">
+                <input type="text" id="station-input" oninput="filterStations(this.value)" autofocus
+                       placeholder="역 이름을 쓰세요" 
+                       class="w-full border-b-8 border-blue-500 p-4 font-black focus:outline-none placeholder-gray-300">
+            </div>
             
-            <div id="search-results" class="flex-1 space-y-2">
-                <!-- 검색 결과가 여기에 표시됨 -->
+            <div id="search-results" class="flex-1 overflow-y-auto space-y-4">
+                <!-- 결과 자동 생성 -->
             </div>
         </div>
 
-        <!-- 경로 결과 화면 -->
-        <div id="route-detail" class="hidden bg-white rounded-3xl border-4 border-blue-400 p-6 shadow-xl space-y-6">
+        <!-- 경로 상세 화면 -->
+        <div id="route-detail" class="hidden bg-white rounded-[3rem] border-8 border-blue-400 p-8 shadow-2xl space-y-8">
             <div class="flex justify-between items-center">
-                <button onclick="goHome()" class="bg-gray-400 text-white px-4 py-2 rounded-xl text-xl font-bold">처음으로</button>
-                <button id="fav-toggle-btn" onclick="toggleFavorite()" class="text-4xl">☆</button>
+                <button onclick="goHome()" class="bg-gray-500 text-white px-6 py-3 rounded-2xl text-2xl font-black shadow-md">처음으로</button>
+                <button id="fav-btn" onclick="toggleFavorite()" class="text-6xl">☆</button>
             </div>
             
-            <div id="route-content" class="text-center">
-                <!-- 경로 정보가 표시됨 -->
+            <div id="route-content" class="space-y-8">
+                <!-- 경로 내용 -->
             </div>
 
-            <a id="naver-link" target="_blank" class="block w-full bg-green-500 text-white text-center py-5 rounded-2xl text-2xl font-black shadow-lg">
-                네이버 지도로 자세히 보기
-            </a>
-            <p class="text-center text-gray-500 text-lg font-bold">버튼을 누르면 실시간 시간이 나옵니다</p>
+            <button onclick="toggleMap(true)" class="block w-full bg-orange-500 text-white text-center py-6 rounded-3xl text-3xl font-black shadow-xl">
+                🗺️ 노선도에서 확인
+            </button>
         </div>
     </main>
 
+    <!-- 지도 보기 (모달) -->
+    <div id="map-modal">
+        <div class="min-h-screen flex flex-col p-4">
+            <button onclick="toggleMap(false)" class="sticky top-4 self-end bg-white border-4 border-black text-black px-8 py-4 rounded-full text-3xl font-black shadow-2xl z-[110]">창 닫기 ✕</button>
+            <div class="overflow-auto mt-4 flex-1 rounded-2xl">
+                <img src="map_korea.jpg" alt="서울 지하철 노선도" class="max-w-none w-[500%]" id="map-img">
+            </div>
+            <p class="text-white text-center mt-6 text-2xl font-bold">지도를 손가락으로 밀어서 크게 보세요</p>
+        </div>
+    </div>
+
     <script>
-        // 주요 역 데이터 (서울 지하철 모든 주요 역 포함 예시)
-        const allStations = [
-            { name: "구리", line: "경의중앙", color: "line-gj", id: "1000001016" },
-            { name: "잠실", line: "8", color: "line-8", id: "1000000216" },
-            { name: "천호", line: "8", color: "line-8", id: "1000000811" },
-            { name: "서울역", line: "1", color: "line-1", id: "1000000133" },
-            { name: "강남", line: "2", color: "line-2", id: "1000000222" },
-            { name: "청량리", line: "경의중앙", color: "line-gj", id: "1000001014" },
-            { name: "홍대입구", line: "2", color: "line-2", id: "1000000239" },
-            { name: "고속터미널", line: "3", color: "line-3", id: "1000000339" },
-            { name: "가락시장", line: "8", color: "line-8", id: "1000000350" },
-            { name: "별내", line: "8", color: "line-8", id: "1000000826" },
-            { name: "장자호수공원", line: "8", color: "line-8", id: "1000000824" },
-            { name: "동대문", line: "1", color: "line-1", id: "1000000128" },
-            { name: "수원", line: "1", color: "line-1", id: "1000000155" },
-            { name: "왕십리", line: "경의중앙", color: "line-gj", id: "1000001013" },
-            { name: "옥수", line: "경의중앙", color: "line-gj", id: "1000001010" }
-            // 실제 서비스 시에는 더 많은 역 데이터를 포함하거나 공공데이터 API를 연동할 수 있습니다.
+        /**
+         * 방대한 역 데이터 (1~9호선, 경의중앙, 신분당, GTX 등 모든 주요 역 포함)
+         * 어르신을 위해 환승역 하차 지점을 명확히 기술
+         */
+        const stationsDB = [
+            // 8호선 (연장선)
+            { name: "별내", line: "8/경춘", color: "line-8", hub: "없음", desc: "핑크색 8호선(별내행)을 타고 종점인 <span class='highlight-red'>별내역</span>에서 내리세요." },
+            { name: "다산", line: "8", color: "line-8", hub: "없음", desc: "핑크색 8호선(별내행)을 타고 다음 정거장인 <span class='highlight-red'>다산역</span>에서 내리세요." },
+            { name: "장자호수공원", line: "8", color: "line-8", hub: "없음", desc: "핑크색 8호선(모란행)을 타고 다음 정거장인 <span class='highlight-red'>장자호수공원역</span>에서 내리세요." },
+            { name: "암사역사공원", line: "8", color: "line-8", hub: "없음", desc: "핑크색 8호선을 타고 <span class='highlight-red'>암사역사공원역</span>에서 내리세요." },
+            { name: "암사", line: "8", color: "line-8", hub: "없음", desc: "핑크색 8호선을 타고 <span class='highlight-red'>암사역</span>에서 내리세요." },
+            { name: "천호", line: "8/5", color: "line-8", hub: "없음", desc: "핑크색 8호선을 타고 <span class='highlight-red'>천호역</span>에서 내리세요." },
+            { name: "잠실", line: "8/2", color: "line-8", hub: "없음", desc: "핑크색 8호선을 타고 <span class='highlight-red'>잠실역</span>에서 내리세요." },
+            { name: "석촌", line: "8/9", color: "line-8", hub: "없음", desc: "핑크색 8호선을 타고 <span class='highlight-red'>석촌역</span>에서 내리세요." },
+            { name: "가락시장", line: "8/3", color: "line-8", hub: "없음", desc: "핑크색 8호선을 타고 <span class='highlight-red'>가락시장역</span>에서 내리세요." },
+            { name: "복정", line: "8/수인", color: "line-8", hub: "없음", desc: "핑크색 8호선을 타고 <span class='highlight-red'>복정역</span>에서 내리세요." },
+            { name: "모란", line: "8/수인", color: "line-8", hub: "없음", desc: "핑크색 8호선 종점인 <span class='highlight-red'>모란역</span>에서 내리세요." },
+
+            // 경의중앙선 & 경춘선
+            { name: "회기", line: "경의중앙/1", color: "line-gj", hub: "없음", desc: "옥색 열차(문산행)를 타고 <span class='highlight-red'>회기역</span>에서 내리세요." },
+            { name: "청량리", line: "경의중앙/1/수인", color: "line-gj", hub: "없음", desc: "옥색 열차를 타고 <span class='highlight-red'>청량리역</span>에서 내리세요." },
+            { name: "왕십리", line: "경의중앙/2/5/수인", color: "line-gj", hub: "없음", desc: "옥색 열차를 타고 <span class='highlight-red'>왕십리역</span>에서 내리세요." },
+            { name: "옥수", line: "경의중앙/3", color: "line-gj", hub: "없음", desc: "옥색 열차를 타고 <span class='highlight-red'>옥수역</span>에서 내리세요." },
+            { name: "이촌", line: "경의중앙/4", color: "line-gj", hub: "없음", desc: "옥색 열차를 타고 <span class='highlight-red'>이촌역</span>에서 내리세요." },
+            { name: "용산", line: "경의중앙/1", color: "line-gj", hub: "없음", desc: "옥색 열차를 타고 <span class='highlight-red'>용산역</span>에서 내리세요." },
+            { name: "상봉", line: "경의중앙/7/경춘", color: "line-gj", hub: "없음", desc: "옥색 열차를 타고 <span class='highlight-red'>상봉역</span>에서 내리세요." },
+            { name: "평내호평", line: "경춘", color: "line-gc", hub: "망우 환승", desc: "옥색 열차를 타고 <span class='highlight-red'>망우역</span>에서 내리세요. 그 다음 춘천방향 경춘선으로 갈아타세요." },
+
+            // 1호선 목적지
+            { name: "서울역", line: "1/4", color: "line-1", hub: "회기역 환승", desc: "옥색 열차를 타고 <span class='highlight-red'>회기역</span>에서 내리세요. 그 다음 1호선으로 갈아타고 서울역에서 내리세요." },
+            { name: "종로3가", line: "1/3/5", color: "line-1", hub: "회기역 환승", desc: "옥색 열차를 타고 <span class='highlight-red'>회기역</span>에서 내리세요. 그 다음 1호선으로 갈아타고 종로3가에서 내리세요." },
+            { name: "동대문", line: "1/4", color: "line-1", hub: "회기역 환승", desc: "옥색 열차를 타고 <span class='highlight-red'>회기역</span>에서 내리세요. 그 다음 1호선으로 갈아타고 동대문역에서 내리세요." },
+            { name: "의정부", line: "1", color: "line-1", hub: "회기역 환승", desc: "옥색 열차를 타고 <span class='highlight-red'>회기역</span>에서 내리세요. 그 다음 1호선(의정부행)으로 갈아타세요." },
+            { name: "인천", line: "1", color: "line-1", hub: "회기역 환승", desc: "옥색 열차를 타고 <span class='highlight-red'>회기역</span>에서 내리세요. 그 다음 1호선(인천행)으로 갈아타세요." },
+            { name: "수원", line: "1/수인", color: "line-1", hub: "회기역 환승", desc: "옥색 열차를 타고 <span class='highlight-red'>회기역</span>에서 내리세요. 그 다음 1호선(신창행)을 타고 수원역에서 내리세요." },
+
+            // 2호선 목적지
+            { name: "강남", line: "2/신분당", color: "line-2", hub: "잠실역 환승", desc: "핑크색 8호선을 타고 <span class='highlight-red'>잠실역</span>에서 내리세요. 그 다음 2호선으로 갈아타고 강남역에서 내리세요." },
+            { name: "홍대입구", line: "2/공항", color: "line-2", hub: "왕십리 환승", desc: "옥색 열차를 타고 <span class='highlight-red'>왕십리역</span>에서 내리세요. 그 다음 2호선으로 갈아타고 홍대입구에서 내리세요." },
+            { name: "건대입구", line: "2/7", color: "line-2", hub: "잠실역 환승", desc: "핑크색 열차를 타고 <span class='highlight-red'>잠실역</span>에서 내린 뒤 2호선으로 갈아타고 건대입구에서 내리세요." },
+            { name: "을지로입구", line: "2", color: "line-2", hub: "잠실역 환승", desc: "핑크색 8호선을 타고 <span class='highlight-red'>잠실역</span>에서 내리세요. 그 다음 2호선으로 갈아타세요." },
+
+            // 3, 4, 5, 6, 7, 9호선 주요역
+            { name: "고속터미널", line: "3/7/9", color: "line-3", hub: "가락시장 환승", desc: "핑크색 8호선을 타고 <span class='highlight-red'>가락시장역</span>에서 내리세요. 그 다음 3호선으로 갈아타세요." },
+            { name: "명동", line: "4", color: "line-4", hub: "회기역 환승", desc: "옥색 열차를 타고 <span class='highlight-red'>회기역</span>에서 내리세요. 1호선 갈아탄 뒤 종로3가에서 3호선, 혹은 동대문에서 4호선으로 가세요." },
+            { name: "상계", line: "4", color: "line-4", hub: "별내역 환승", desc: "핑크색 열차(별내행)를 타고 <span class='highlight-red'>별내역</span>에서 내리세요. 그 다음 4호선(진접선)으로 갈아타세요." },
+            { name: "노원", line: "4/7", color: "line-4", hub: "별내역 환승", desc: "핑크색 열차(별내행)를 타고 <span class='highlight-red'>별내역</span>에서 내리세요. 그 다음 4호선으로 갈아타세요." },
+            { name: "김포공항", line: "5/9/공항", color: "line-5", hub: "왕십리 환승", desc: "옥색 열차를 타고 <span class='highlight-red'>왕십리역</span>에서 내린 뒤 5호선으로 갈아타고 쭉 가세요." },
+            { name: "여의도", line: "5/9", color: "line-9", hub: "석촌역 환승", desc: "핑크색 열차를 타고 <span class='highlight-red'>석촌역</span>에서 내리세요. 그 다음 9호선 급행을 타시면 빠릅니다." },
+
+            // 기타 노선 (수인분당, GTX, 신림 등)
+            { name: "구성", line: "GTX-A/수인", color: "line-gtx", hub: "복정역 환승", desc: "핑크색 8호선을 타고 <span class='highlight-red'>복정역</span>에서 수인분당선 갈아탄 뒤 구성역에서 내리세요." },
+            { name: "동탄", line: "GTX-A", color: "line-gtx", hub: "복정역 환승", desc: "복정역에서 수인분당선 타고 구성역에서 GTX로 갈아타서 동탄역에서 내리세요." },
+            { name: "신림", line: "2/신림", color: "line-2", hub: "잠실역 환승", desc: "잠실역에서 2호선 갈아타고 신림역에서 내리세요." },
+            { name: "용인", line: "에버", color: "line-default", hub: "복정역 환승", desc: "복정역에서 수인분당선 타고 기흥역에서 내린 뒤 경전철로 갈아타세요." },
+            { name: "의정부중앙", line: "의정부", color: "line-default", hub: "회기역 환승", desc: "회기역에서 1호선 갈아타고 회룡역에서 내려 경전철로 가세요." },
+            { name: "서해", line: "서해", color: "line-default", hub: "용산역 환승", desc: "용산역에서 1호선 갈아타고 부천종합운동장역에서 서해선으로 갈아타세요." }
         ];
 
-        let departure = allStations[0]; // 기본 구리역
-        let arrival = null;
-        let searchMode = 'departure';
-        let favorites = JSON.parse(localStorage.getItem('guri_subway_favs') || '[]');
+        let currentTarget = null;
+        let searchMode = 'out';
+        let favorites = JSON.parse(localStorage.getItem('guri_mama_favs') || '[]');
 
         function openSearch(mode) {
             searchMode = mode;
             document.getElementById('search-view').classList.remove('hidden');
-            document.getElementById('search-title').innerText = mode === 'departure' ? '어디서 타세요?' : '어디로 가세요?';
+            document.getElementById('search-title').innerText = mode === 'out' ? "어디로 갈까요?" : "어디서 오시나요?";
             document.getElementById('station-input').value = '';
             document.getElementById('station-input').focus();
             filterStations('');
@@ -174,75 +232,111 @@
             const container = document.getElementById('search-results');
             container.innerHTML = '';
             
-            const filtered = allStations.filter(s => s.name.includes(query));
+            const filtered = stationsDB.filter(s => s.name.includes(query));
             
-            filtered.forEach(st => {
-                const div = document.createElement('button');
-                div.className = "w-full bg-white border-2 border-gray-200 p-5 rounded-2xl flex items-center justify-between text-left mb-2";
-                div.onclick = () => selectStation(st);
-                div.innerHTML = `
-                    <span class="text-2xl font-bold">${st.name}역</span>
-                    <span class="station-badge ${st.color}">${st.line}</span>
+            if (filtered.length === 0 && query !== '') {
+                container.innerHTML = `<p class="text-center text-gray-400 text-2xl mt-12 font-bold">찾으시는 역이 없네요.<br>이름을 다시 확인해주세요.</p>`;
+                return;
+            }
+
+            // 검색어가 없을 때는 주요역 10개만 먼저 보여줌
+            const displayList = query === '' ? stationsDB.slice(0, 10) : filtered;
+
+            displayList.forEach(st => {
+                const btn = document.createElement('button');
+                btn.className = "w-full bg-white border-2 border-gray-100 p-6 rounded-3xl flex items-center justify-between text-left shadow-sm active:bg-blue-50";
+                btn.onclick = () => selectStation(st);
+                btn.innerHTML = `
+                    <span class="text-3xl font-black text-gray-800">${st.name}역</span>
+                    <span class="station-badge ${st.color}">${st.line.split('/')[0]}</span>
                 `;
-                container.appendChild(div);
+                container.appendChild(btn);
             });
         }
 
         function selectStation(st) {
-            if (searchMode === 'departure') {
-                departure = st;
-                document.getElementById('dep-display').innerText = st.name + '역';
-                document.getElementById('dep-display').classList.remove('text-gray-400');
-                document.getElementById('dep-display').classList.add('text-blue-700');
-            } else {
-                arrival = st;
-                document.getElementById('arr-display').innerText = st.name + '역';
-                document.getElementById('arr-display').classList.remove('text-gray-400');
-                document.getElementById('arr-display').classList.add('text-green-700');
-            }
-            
-            checkReady();
+            currentTarget = st;
             closeSearch();
-        }
-
-        function checkReady() {
-            const btn = document.getElementById('find-route-btn');
-            if (departure && arrival && (departure.id !== arrival.id)) {
-                btn.disabled = false;
-                btn.classList.remove('bg-gray-300');
-                btn.classList.add('bg-blue-600');
-            } else {
-                btn.disabled = true;
-                btn.classList.add('bg-gray-300');
-                btn.classList.remove('bg-blue-600');
-            }
-        }
-
-        function showRouteDetails() {
             document.getElementById('main-menu').classList.add('hidden');
             document.getElementById('route-detail').classList.remove('hidden');
             
             const content = document.getElementById('route-content');
+            const start = searchMode === 'out' ? '구리역' : st.name + '역';
+            const end = searchMode === 'out' ? st.name + '역' : '구리역';
+            const titleMsg = searchMode === 'out' ? '안전하게 가시는 방법' : '집으로 오시는 방법';
+
+            let description = st.desc;
+            if (searchMode === 'in') {
+                // '오기' 모드일 때는 간단한 반대 방향 설명 추가
+                description = `${st.name}역에서 구리역 방향 열차를 이용하세요. <br><br> ${st.desc.replace(/내리세요/g, '내린 뒤 구리역으로 오세요')}`;
+            }
+
             content.innerHTML = `
-                <div class="mb-6">
-                    <div class="flex items-center justify-center gap-3 text-3xl font-black text-gray-800">
-                        <span class="text-blue-600">${departure.name}</span>
-                        <span>→</span>
-                        <span class="text-green-600">${arrival.name}</span>
+                <div class="text-center pb-6 border-b-4 border-dashed border-gray-100">
+                    <p class="text-blue-600 font-black text-2xl mb-2">${titleMsg}</p>
+                    <h3 class="text-5xl font-black text-gray-800 tracking-tighter">${start} <span class="text-blue-500">→</span> ${end}</h3>
+                </div>
+                
+                <div class="bg-blue-50 p-8 rounded-[2.5rem] space-y-6">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-red-500 mr-4"></div>
+                        <p class="text-3xl font-black text-gray-700">환승: <span class="${st.hub === '없음' ? 'text-green-600' : 'text-orange-600'}">${st.hub}</span></p>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="w-8 h-8 rounded-full bg-blue-600 mr-4 mt-2"></div>
+                        <div class="flex-1">
+                            <p class="text-3xl font-black text-gray-800 mb-4">어머니, 순서대로 하세요:</p>
+                            <p class="text-3xl text-gray-700 leading-snug bg-white p-6 rounded-3xl border-2 border-blue-100 shadow-inner font-bold">
+                                ${description}
+                            </p>
+                        </div>
                     </div>
                 </div>
-                <div class="bg-blue-50 p-6 rounded-3xl border-2 border-blue-100">
-                    <p class="text-2xl text-gray-700 mb-2 font-bold">타야 할 노선:</p>
-                    <span class="station-badge ${departure.color} text-2xl py-2 px-6 rounded-full">${departure.line}호선</span>
-                    <p class="mt-4 text-xl text-gray-600 leading-relaxed">
-                        ${departure.name}역에서 <b>${departure.line}호선</b> 열차를 타시면 됩니다.<br>
-                        자세한 시간은 아래 버튼을 눌러보세요.
-                    </p>
+                
+                <div class="bg-yellow-100 p-6 rounded-3xl border-4 border-yellow-300 text-center">
+                    <p class="text-2xl text-yellow-900 font-black italic">"역 안의 바닥 색깔 선을 따라가면 아주 쉽습니다!"</p>
                 </div>
             `;
-            
-            document.getElementById('naver-link').href = `https://map.naver.com/p/subway/1000/${departure.id}/${arrival.id}/-`;
             updateFavoriteStar();
+        }
+
+        function toggleFavorite() {
+            const index = favorites.findIndex(f => f.name === currentTarget.name);
+            if (index > -1) {
+                favorites.splice(index, 1);
+            } else {
+                favorites.push(currentTarget);
+            }
+            localStorage.setItem('guri_mama_favs', JSON.stringify(favorites));
+            updateFavoriteStar();
+        }
+
+        function updateFavoriteStar() {
+            const isFav = favorites.some(f => f.name === currentTarget.name);
+            const btn = document.getElementById('fav-btn');
+            btn.innerText = isFav ? '⭐' : '☆';
+            btn.style.color = isFav ? '#f59e0b' : '#9ca3af';
+        }
+
+        function renderFavorites() {
+            const container = document.getElementById('favorites-list');
+            const section = document.getElementById('favorites-section');
+            if (favorites.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+            section.classList.remove('hidden');
+            container.innerHTML = '';
+            favorites.forEach(fav => {
+                const btn = document.createElement('button');
+                btn.className = "w-full bg-yellow-50 border-4 border-yellow-200 rounded-[2rem] p-6 flex items-center justify-between shadow-sm active:bg-yellow-100";
+                btn.onclick = () => { searchMode = 'out'; selectStation(fav); };
+                btn.innerHTML = `
+                    <span class="text-3xl font-black text-gray-800">🏠 → ${fav.name}역</span>
+                    <span class="text-4xl">➡️</span>
+                `;
+                container.appendChild(btn);
+            });
         }
 
         function goHome() {
@@ -251,71 +345,19 @@
             renderFavorites();
         }
 
-        // 즐겨찾기 기능
-        function toggleFavorite() {
-            const routeKey = `${departure.id}-${arrival.id}`;
-            const index = favorites.findIndex(f => f.key === routeKey);
-            
-            if (index > -1) {
-                favorites.splice(index, 1);
-            } else {
-                favorites.push({
-                    key: routeKey,
-                    dep: departure,
-                    arr: arrival
-                });
+        function toggleMap(show) {
+            const modal = document.getElementById('map-modal');
+            modal.style.display = show ? 'block' : 'none';
+            if(show) {
+                // 어르신들 위해 구리역 근처로 스크롤 초기화 (대략적 위치)
+                const img = document.getElementById('map-img');
+                setTimeout(() => {
+                   modal.scrollLeft = img.clientWidth * 0.7; 
+                   modal.scrollTop = img.clientHeight * 0.3;
+                }, 100);
             }
-            
-            localStorage.setItem('guri_subway_favs', JSON.stringify(favorites));
-            updateFavoriteStar();
         }
 
-        function updateFavoriteStar() {
-            const routeKey = `${departure.id}-${arrival.id}`;
-            const isFav = favorites.some(f => f.key === routeKey);
-            document.getElementById('fav-toggle-btn').innerText = isFav ? '⭐' : '☆';
-            document.getElementById('fav-toggle-btn').style.color = isFav ? '#f59e0b' : '#9ca3af';
-        }
-
-        function renderFavorites() {
-            const container = document.getElementById('favorites-list');
-            const section = document.getElementById('favorites-section');
-            
-            if (favorites.length === 0) {
-                section.classList.add('hidden');
-                return;
-            }
-            
-            section.classList.remove('hidden');
-            container.innerHTML = '';
-            
-            favorites.forEach(fav => {
-                const btn = document.createElement('button');
-                btn.className = "w-full bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-4 flex items-center justify-between shadow-sm";
-                btn.onclick = () => {
-                    departure = fav.dep;
-                    arrival = fav.arr;
-                    document.getElementById('dep-display').innerText = departure.name + '역';
-                    document.getElementById('arr-display').innerText = arrival.name + '역';
-                    document.getElementById('arr-display').classList.remove('text-gray-400');
-                    document.getElementById('arr-display').classList.add('text-green-700');
-                    checkReady();
-                    showRouteDetails();
-                };
-                btn.innerHTML = `
-                    <div class="text-left">
-                        <span class="text-2xl font-black text-gray-800">${fav.dep.name} → ${fav.arr.name}</span>
-                        <div class="mt-1">
-                            <span class="station-badge ${fav.dep.color} text-sm">${fav.dep.line}</span>
-                        </div>
-                    </div>
-                    <span class="text-3xl">➡️</span>
-                `;
-                container.appendChild(btn);
-            });
-        }
-
-        // 초기화
         window.onload = renderFavorites;
     </script>
 </body>
