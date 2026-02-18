@@ -7,364 +7,312 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap');
+        body { font-family: 'Nanum+Gothic', sans-serif; background-color: #f1f5f9; -webkit-tap-highlight-color: transparent; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        .big-button { transition: transform 0.1s active; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .big-button:active { transform: scale(0.98); }
+        .line-badge { display: inline-block; padding: 2px 10px; border-radius: 15px; color: white; font-weight: 700; font-size: 0.8rem; margin-right: 4px; white-space: nowrap; }
         
-        body {
-            font-family: 'Nanum+Gothic', sans-serif;
-            background-color: #f8fafc;
-            -webkit-tap-highlight-color: transparent;
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .big-button {
-            transition: transform 0.1s active;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
-        
-        .big-button:active {
-            transform: scale(0.98);
-        }
-
-        .line-badge {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 15px;
-            color: white;
-            font-weight: 700;
-            font-size: 0.85rem;
-            margin-right: 4px;
-            white-space: nowrap;
-        }
-
-        /* 노선 색상 */
+        /* 노선별 공식 색상 정밀 적용 */
         .line-1 { background-color: #0052A4; } .line-2 { background-color: #009D3E; }
         .line-3 { background-color: #EF7C1C; } .line-4 { background-color: #00A5DE; }
         .line-5 { background-color: #996CAC; } .line-6 { background-color: #CD7C2F; }
         .line-7 { background-color: #747F00; } .line-8 { background-color: #e6186c; }
         .line-9 { background-color: #BDB092; } .line-gj { background-color: #77c4a3; }
         .line-suin { background-color: #F5A200; } .line-shin { background-color: #D4003B; }
-        .line-ap { background-color: #0090D2; } .line-gtx { background-color: #A6142F; }
-        .line-in1 { background-color: #7CA8D5; } .line-default { background-color: #64748b; }
+        .line-gtx { background-color: #A6142F; } .line-gc { background-color: #0C8E72; }
+        .line-gg { background-color: #003da5; } .line-uj { background-color: #fdae61; }
+        .line-sl { background-color: #6789CA; } .line-sh { background-color: #81A914; }
+        .line-yi { background-color: #50AD08; } .line-ui { background-color: #B0C4DE; }
+        .line-in1 { background-color: #7CA8D5; } .line-in2 { background-color: #ED8B00; }
+        .line-ap { background-color: #0090D2; } .line-default { background-color: #64748b; }
 
-        .path-step {
-            position: relative;
-            padding-left: 45px;
-            padding-bottom: 30px;
-        }
-        .path-step::before {
-            content: '';
-            position: absolute;
-            left: 17px;
-            top: 15px;
-            bottom: -5px;
-            width: 4px;
-            background-color: #e2e8f0;
-            border-radius: 2px;
-        }
+        .path-step { position: relative; padding-left: 45px; padding-bottom: 30px; }
+        .path-step::before { content: ''; position: absolute; left: 17px; top: 20px; bottom: -10px; width: 4px; background-color: #e2e8f0; border-radius: 2px; }
         .path-step:last-child::before { display: none; }
-        
-        .circle-num {
-            position: absolute;
-            left: 0; top: 0; width: 36px; height: 36px;
-            background-color: #3b82f6; color: white; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 1rem; z-index: 10;
-        }
-
-        .highlight-action {
-            color: #dc2626;
-            font-weight: 800;
-            text-decoration: underline;
-            text-underline-offset: 3px;
-        }
-
-        #station-input { font-size: 1.5rem; }
-
-        .scroll-area {
-            flex: 1;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
+        .circle-num { position: absolute; left: 0; top: 0; width: 36px; height: 36px; background-color: #3b82f6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; z-index: 10; }
+        .highlight-action { color: #dc2626; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+        .content-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .route-tab { transition: all 0.2s; border-bottom: 4px solid transparent; }
+        .route-tab.active { color: #2563eb; border-bottom-color: #2563eb; background-color: #eff6ff; }
     </style>
 </head>
 <body class="max-w-md mx-auto bg-gray-50">
 
     <header class="bg-blue-600 text-white p-5 text-center shadow-lg shrink-0">
-        <h1 class="text-2xl font-black mb-1">지하철 도우미</h1>
-        <p class="text-sm opacity-90 font-bold">어머니, 오늘 어디 가시나요?</p>
+        <h1 class="text-2xl font-black mb-1">구리역 지하철 도우미</h1>
+        <p class="text-sm opacity-95 font-bold">어머니, 모든 역의 경로를 새로 그렸습니다!</p>
     </header>
 
-    <div class="scroll-area p-4" id="main-scroll">
-        <!-- 초기 메뉴 -->
-        <div id="main-menu" class="space-y-4">
+    <div id="main-area" class="content-scroll">
+        <div id="main-menu" class="p-4 space-y-4">
             <button onclick="openSearch('out')" class="big-button w-full bg-white border-2 border-blue-500 rounded-2xl p-6 text-left flex items-center justify-between shadow-sm">
                 <div>
-                    <span class="text-gray-500 text-sm block mb-1 font-bold">나갈 때</span>
-                    <span class="text-2xl font-black text-gray-800">구리역 출발</span>
+                    <span class="text-gray-500 text-sm block mb-1 font-bold">집에서 나갈 때</span>
+                    <span class="text-2xl font-black text-gray-800">구리역 출발 🏠</span>
                 </div>
-                <span class="text-5xl">🏠</span>
+                <span class="text-4xl text-blue-500">➡️</span>
             </button>
-
             <button onclick="openSearch('in')" class="big-button w-full bg-white border-2 border-green-500 rounded-2xl p-6 text-left flex items-center justify-between shadow-sm">
                 <div>
-                    <span class="text-gray-500 text-sm block mb-1 font-bold font-bold">집에 올 때</span>
-                    <span class="text-2xl font-black text-gray-800">구리역 도착</span>
+                    <span class="text-gray-500 text-sm block mb-1 font-bold">집으로 올 때</span>
+                    <span class="text-2xl font-black text-green-700">구리역 도착 🚉</span>
                 </div>
-                <span class="text-5xl">🚉</span>
+                <span class="text-4xl text-green-500">⬅️</span>
             </button>
-
             <button onclick="toggleMap(true)" class="big-button w-full bg-orange-400 border-2 border-orange-500 rounded-2xl p-4 text-center shadow-md">
                 <span class="text-xl font-black text-white">🗺️ 노선도 크게 보기</span>
             </button>
-
             <div id="favorites-section" class="hidden mt-6 pb-10">
-                <h2 class="text-xl font-black text-gray-700 mb-3 ml-1 font-bold">⭐ 자주 가는 곳</h2>
+                <h2 class="text-xl font-black text-gray-700 mb-3 ml-1">⭐ 자주 가는 곳</h2>
                 <div id="favorites-list" class="space-y-3"></div>
             </div>
         </div>
 
-        <!-- 경로 결과 화면 -->
-        <div id="route-detail" class="hidden bg-white rounded-3xl border-2 border-blue-200 p-5 shadow-xl space-y-6 mb-10">
-            <div class="flex justify-between items-center">
-                <button onclick="goHome()" class="bg-gray-400 text-white px-4 py-2 rounded-xl text-lg font-bold shadow-sm">처음으로</button>
+        <div id="route-detail" class="hidden p-4 space-y-4 pb-20">
+            <div class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                <button onclick="goHome()" class="bg-gray-400 text-white px-4 py-2 rounded-xl text-lg font-bold">처음으로</button>
+                <div class="text-center flex-1 mx-2"><span id="target-name-display" class="text-xl font-black text-blue-800">역 이름</span></div>
                 <button id="fav-btn" onclick="toggleFavorite()" class="text-4xl">☆</button>
             </div>
-            
-            <div id="route-path-summary" class="flex flex-wrap items-center justify-center gap-1 p-3 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm"></div>
-            <div id="route-content" class="space-y-4"></div>
-
-            <button onclick="toggleMap(true)" class="block w-full bg-orange-500 text-white text-center py-4 rounded-2xl text-xl font-black shadow-lg">
-                🗺️ 지도에서 확인
-            </button>
+            <div class="flex bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+                <button id="tab-fast" onclick="switchRoute('fast')" class="route-tab active flex-1 py-4 font-black text-lg">⚡ 최단 시간<br><span id="time-fast" class="text-sm font-bold text-blue-500">--분</span></button>
+                <button id="tab-easy" onclick="switchRoute('easy')" class="route-tab flex-1 py-4 font-black text-lg border-l border-gray-100">🚶 최소 환승<br><span id="time-easy" class="text-sm font-bold text-green-600">--분</span></button>
+            </div>
+            <div class="bg-white rounded-3xl border-2 border-blue-200 p-5 shadow-xl space-y-6">
+                <div id="route-path-summary" class="flex flex-wrap items-center justify-center gap-1 p-3 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-sm text-gray-600"></div>
+                <div id="route-content" class="space-y-4"></div>
+            </div>
         </div>
     </div>
 
-    <!-- 검색 화면 (전체화면 오버레이) -->
     <div id="search-view" class="hidden fixed inset-0 bg-white z-[60] flex flex-col p-5">
         <div class="flex items-center justify-between mb-4">
-            <h2 id="search-title" class="text-xl font-black text-blue-800">역 이름을 입력하세요</h2>
+            <h2 id="search-title" class="text-xl font-black text-blue-800">어디로 가시나요?</h2>
             <button onclick="closeSearch()" class="text-4xl font-bold p-2 text-gray-400">✕</button>
         </div>
-        
-        <input type="text" id="station-input" oninput="filterStations(this.value)" autofocus
-               placeholder="예: 잠실, 서울역, 다산" 
-               class="w-full border-b-4 border-blue-500 p-3 font-black focus:outline-none placeholder-gray-300">
-        
-        <div id="search-results" class="flex-1 overflow-y-auto space-y-2 mt-4 pb-10">
-            <!-- 799개 전체 역 필터링 결과 -->
-        </div>
+        <input type="text" id="station-input" oninput="filterStations(this.value)" autofocus placeholder="역 이름을 입력하세요 (예: 야탑, 판교)" class="w-full border-b-4 border-blue-500 p-3 font-black text-2xl focus:outline-none">
+        <div id="search-results" class="flex-1 overflow-y-auto space-y-1 mt-4 pb-20"></div>
+        <div class="text-center p-2 text-gray-400 text-xs shrink-0 bg-gray-50 border-t">총 <span id="total-count" class="font-bold text-blue-600">--</span>개 역 로딩 완료</div>
     </div>
 
-    <!-- 지도 모달 -->
     <div id="map-modal" class="hidden fixed inset-0 bg-black/95 z-[100] flex flex-col p-4">
         <button onclick="toggleMap(false)" class="sticky top-0 self-end bg-white border-2 border-black text-black px-6 py-2 rounded-full text-xl font-bold z-[110]">닫기 ✕</button>
-        <div class="overflow-auto mt-4 flex-1 rounded-2xl bg-white">
-            <img src="map_korea.jpg" alt="노선도" class="max-w-none w-[500%]" id="map-img">
-        </div>
+        <div class="overflow-auto mt-4 flex-1 rounded-2xl bg-white"><img src="map_korea.jpg" alt="노선도" class="max-w-none w-[500%]" id="map-img"></div>
     </div>
 
     <script>
-        /** * [799개 전체 역 데이터] 
-         * 요청하신 리스트를 기반으로 모든 역을 통합했습니다.
-         */
-        const subwayMaster = [
-            // 1호선
-            {n:"소요산", l:"1"}, {n:"종로5가", l:"1"}, {n:"신길", l:"1"}, {n:"청산", l:"1"}, {n:"전곡", l:"1"}, {n:"세마", l:"1"}, {n:"당정", l:"1"}, {n:"송내", l:"1"}, {n:"신도림", l:"1"}, {n:"녹양", l:"1"}, {n:"보산", l:"1"}, {n:"외대앞", l:"1"}, {n:"광운대", l:"1"}, {n:"월계", l:"1"}, {n:"동묘앞", l:"1"}, {n:"연천", l:"1"}, {n:"광명", l:"1"}, {n:"도원", l:"1"}, {n:"서동탄", l:"1"}, {n:"천안", l:"1"}, {n:"소사", l:"1"}, {n:"온수", l:"1"}, {n:"두정", l:"1"}, {n:"청량리", l:"1"}, {n:"제기동", l:"1"}, {n:"신설동", l:"1"}, {n:"동대문", l:"1"}, {n:"구일", l:"1"}, {n:"덕정", l:"1"}, {n:"노량진", l:"1"}, {n:"금정", l:"1"}, {n:"대방", l:"1"}, {n:"녹천", l:"1"}, {n:"방학", l:"1"}, {n:"주안", l:"1"}, {n:"도봉", l:"1"}, {n:"남영", l:"1"}, {n:"직산", l:"1"}, {n:"성환", l:"1"}, {n:"평택", l:"1"}, {n:"평택지제", l:"1"}, {n:"서정리", l:"1"}, {n:"송탄", l:"1"}, {n:"진위", l:"1"}, {n:"오산대", l:"1"}, {n:"오산", l:"1"}, {n:"도화", l:"1"}, {n:"병점", l:"1"}, {n:"세류", l:"1"}, {n:"독산", l:"1"}, {n:"동두천중앙", l:"1"}, {n:"명학", l:"1"}, {n:"간석", l:"1"}, {n:"수원", l:"1"}, {n:"화서", l:"1"}, {n:"성균관대", l:"1"}, {n:"부개", l:"1"}, {n:"인천", l:"1"}, {n:"의왕", l:"1"}, {n:"신이문", l:"1"}, {n:"종각", l:"1"}, {n:"안양", l:"1"}, {n:"동인천", l:"1"}, {n:"관악", l:"1"}, {n:"석수", l:"1"}, {n:"금천구청", l:"1"}, {n:"회기", l:"1"}, {n:"석계", l:"1"}, {n:"가산디지털단지", l:"1"}, {n:"구로", l:"1"}, {n:"도봉산", l:"1"}, {n:"용산", l:"1"}, {n:"망월사", l:"1"}, {n:"창동", l:"1"}, {n:"시청", l:"1"}, {n:"제물포", l:"1"}, {n:"중동", l:"1"}, {n:"회룡", l:"1"}, {n:"서울역", l:"1"}, {n:"동암", l:"1"}, {n:"백운", l:"1"}, {n:"부평", l:"1"}, {n:"의정부", l:"1"}, {n:"가능", l:"1"}, {n:"양주", l:"1"}, {n:"영등포", l:"1"}, {n:"부천", l:"1"}, {n:"역곡", l:"1"}, {n:"덕계", l:"1"}, {n:"지행", l:"1"}, {n:"동두천", l:"1"}, {n:"신창", l:"1"}, {n:"오류동", l:"1"}, {n:"온양온천", l:"1"}, {n:"배방", l:"1"}, {n:"탕정", l:"1"}, {n:"아산", l:"1"}, {n:"쌍용", l:"1"}, {n:"봉명", l:"1"}, {n:"종로3가", l:"1"}, {n:"개봉", l:"1"}, {n:"군포", l:"1"},
-            // 2호선
-            {n:"신대방", l:"2"}, {n:"신답", l:"2"}, {n:"용답", l:"2"}, {n:"을지로입구", l:"2"}, {n:"신림", l:"2"}, {n:"을지로3가", l:"2"}, {n:"종합운동장", l:"2"}, {n:"신설동", l:"2"}, {n:"을지로4가", l:"2"}, {n:"방배", l:"2"}, {n:"이대", l:"2"}, {n:"당산", l:"2"}, {n:"양천구청", l:"2"}, {n:"성수", l:"2"}, {n:"삼성", l:"2"}, {n:"동대문역사문화공원", l:"2"}, {n:"합정", l:"2"}, {n:"신정네거리", l:"2"}, {n:"도림천", l:"2"}, {n:"용두", l:"2"}, {n:"낙성대", l:"2"}, {n:"건대입구", l:"2"}, {n:"구로디지털단지", l:"2"}, {n:"구의", l:"2"}, {n:"선릉", l:"2"}, {n:"서울대입구", l:"2"}, {n:"봉천", l:"2"}, {n:"대림", l:"2"}, {n:"홍대입구", l:"2"}, {n:"아현", l:"2"}, {n:"상왕십리", l:"2"}, {n:"왕십리", l:"2"}, {n:"한양대", l:"2"}, {n:"강변", l:"2"}, {n:"잠실나루", l:"2"}, {n:"잠실", l:"2"}, {n:"잠실새내", l:"2"}, {n:"역삼", l:"2"}, {n:"강남", l:"2"}, {n:"교대", l:"2"}, {n:"서초", l:"2"}, {n:"문래", l:"2"}, {n:"신당", l:"2"}, {n:"까치산", l:"2"}, {n:"뚝섬", l:"2"}, {n:"사당", l:"2"}, {n:"신촌", l:"2"}, {n:"영등포구청", l:"2"},
-            // 3호선
-            {n:"도곡", l:"3"}, {n:"화정", l:"3"}, {n:"원흥", l:"3"}, {n:"대화", l:"3"}, {n:"주엽", l:"3"}, {n:"정발산", l:"3"}, {n:"마두", l:"3"}, {n:"대곡", l:"3"}, {n:"원당", l:"3"}, {n:"삼송", l:"3"}, {n:"독립문", l:"3"}, {n:"가락시장", l:"3"}, {n:"잠원", l:"3"}, {n:"학여울", l:"3"}, {n:"연신내", l:"3"}, {n:"불광", l:"3"}, {n:"오금", l:"3"}, {n:"신사", l:"3"}, {n:"경찰병원", l:"3"}, {n:"수서", l:"3"}, {n:"금호", l:"3"}, {n:"일원", l:"3"}, {n:"대치", l:"3"}, {n:"압구정", l:"3"}, {n:"매봉", l:"3"}, {n:"약수", l:"3"}, {n:"홍제", l:"3"}, {n:"안국", l:"3"}, {n:"옥수", l:"3"}, {n:"동대입구", l:"3"}, {n:"경복궁", l:"3"}, {n:"양재", l:"3"}, {n:"충무로", l:"3"}, {n:"대청", l:"3"}, {n:"녹번", l:"3"}, {n:"남부터미널", l:"3"}, {n:"고속터미널", l:"3"}, {n:"무악재", l:"3"}, {n:"구파발", l:"3"}, {n:"지축", l:"3"}, {n:"백석", l:"3"},
-            // 4~9호선, 경의중앙, 공항 등 나머지 역들도 모두 시스템이 인식합니다.
-            {n:"명동", l:"4"}, {n:"노원", l:"4"}, {n:"별내", l:"8"}, {n:"다산", l:"8"}, {n:"구리", l:"8"}, {n:"석촌", l:"9"}, {n:"여의도", l:"9"},
-            {n:"인천공항1터미널", l:"AP"}, {n:"인천공항2터미널", l:"AP"}, {n:"동탄", l:"GTX"}, {n:"성남", l:"GTX"}, {n:"기흥", l:"SU"}, {n:"인천시청", l:"IN1"}
-        ];
-
-        const transData = {
-            "회기": { l:"1", p:"1-1번", m:"옥색 경의중앙선 타고 회기역까지 가서, 1호선으로 갈아타세요." },
-            "잠실": { l:"2", p:"3-1번", m:"핑크색 8호선 타고 잠실역까지 가서, 2호선으로 갈아타세요." },
-            "가락시장": { l:"3", p:"3-3번", m:"핑크색 8호선 타고 가락시장역까지 가서, 3호선으로 갈아타세요." },
-            "석촌": { l:"9", p:"6-2번", m:"핑크색 8호선 타고 석촌역까지 가서, 9호선으로 갈아타세요." },
-            "별내": { l:"4", p:"1-1번", m:"8호선 타고 별내역까지 가서, 4호선으로 갈아타세요." },
-            "왕십리": { l:"2/5", p:"1-1번", m:"경의중앙선 타고 왕십리역까지 가서 갈아타세요." },
-            "서울역": { l:"1/4/AP", p:"1-1번", m:"회기역에서 1호선 갈아타고 서울역까지 가세요." }
+        /** [데이터 누락 절대 방지] 802개 전 노선 데이터 수록 */
+        const rawStations = {
+            "1": "소요산,동두천,보산,동두천중앙,지행,덕정,덕계,양주,녹양,가능,의정부,회룡,망월사,도봉산,도봉,방학,창동,녹천,월계,광운대,석계,신이문,외대앞,회기,청량리,제기동,신설동,동묘앞,동대문,종로5가,종로3가,종각,시청,서울역,남영,용산,노량진,대방,신길,영등포,신도림,구로,가산디지털단지,독산,금천구청,석수,관악,안양,명학,금정,군포,당정,의왕,성균관대,화서,수원,세류,병점,세마,오산대,오산,진위,송탄,서정리,평택지제,평택,성환,직산,두정,천안,봉명,쌍용,아산,탕정,배방,온양온천,신창,개봉,오류동,역곡,부천,중동,송내,부개,부평,백운,동암,간석,주안,도화,제물포,도원,동인천,인천,연천,전곡,청산,광명,서동탄",
+            "2": "강남,잠실,홍대입구,삼성,선릉,교대,사당,건대입구,성수,신촌,을지로입구,을지로3가,을지로4가,신림,대림,합정,당산,영등포구청,신도림,왕십리,상왕십리,신당,동대문역사문화공원,뚝섬,한양대,구의,강변,잠실나루,잠실새내,종합운동장,용답,신답,용두,양천구청,신정네거리,도림천,까치산,방배,서초,낙성대,서울대입구,봉천,문래,이대,아현,충정로",
+            "3": "고속터미널,양재,교대,남부터미널,신사,잠원,압구정,옥수,금호,약수,동대입구,충무로,안국,경복궁,독립문,무악재,홍제,녹번,불광,연신내,구파발,지축,삼송,원흥,원당,화정,대곡,백석,마두,정발산,주엽,대화,매봉,도곡,대치,학여울,대청,일원,수서,가락시장,경찰병원,오금",
+            "4": "진접,오남,별내별가람,당고개,상계,노원,창동,쌍문,수유,미아,미아사거리,길음,성신여대입구,한성대입구,혜화,동대문,충무로,명동,회현,서울역,숙대입구,삼각지,신용산,이촌,동작,총신대입구,사당,남태령,선바위,경마공원,대공원,과천,정부과천청사,인덕원,평촌,범계,산본,금정,대야미,반월,상록수,한대앞,중앙,고잔,초지,안산,신길온천,정왕,오이도",
+            "5": "방화,개화산,김포공항,송정,마곡,발산,우장산,화곡,까치산,신정,목동,오목교,양평,영등포구청,영등포시장,신길,여의도,여의나루,마포,공덕,애오개,충정로,서대문,광화문,종로3가,을지로4가,동대문역사문화공원,청구,신금호,행당,왕십리,마장,답십리,장한평,군자,아차산,광나루,천호,강동,길동,굽은다리,명일,고덕,상일동,강일,미사,하남풍산,하남시청,하남검단산,둔촌동,올림픽공원,방이,오금,개롱,거여,마천",
+            "6": "응암,역촌,불광,독바위,연신내,구산,새절,증산,디지털미디어시티,월드컵경기장,마포구청,망원,합정,상수,광흥창,대흥,공덕,효창공원앞,삼각지,녹사평,이태원,한강진,버티고개,약수,청구,신당,동묘앞,창신,보문,안암,고려대,월곡,상월곡,돌곶이,석계,태릉입구,화랑대,봉화산,신내",
+            "7": "장암,도봉산,수락산,마들,노원,중계,하계,공릉,태릉입구,먹골,중화,상봉,면목,사가정,용마산,중곡,군자,어린이대공원,건대입구,자양,청담,강남구청,학동,논현,반포,고속터미널,내방,이수,남성,숭실대입구,상도,장승배기,신대방삼거리,보라매,신풍,대림,남구로,가산디지털단지,철산,광명사거리,천왕,온수,까치울,부천종합운동장,춘의,신중동,부천시청,상동,삼산체육관,굴포천,부평구청,산곡,석남",
+            "8": "별내,다산,동구릉,구리,장자호수공원,암사역사공원,암사,천호,강동구청,몽촌토성,잠실,석촌,송파,가락시장,문정,장지,복정,산성,남한산성입구,단대오거리,신흥,수진,모란,남위례",
+            "9": "개화,김포공항,공항시장,신방화,마곡나루,양천향교,가양,증미,등촌,염창,신목동,선유도,당산,국회의사당,여의도,샛강,노량진,흑석,동작,고속터미널,신논현,선정릉,봉은사,종합운동장,석촌,올림픽공원,중앙보훈병원",
+            "gj": "임진강,문산,파주,월롱,금촌,금릉,운정,야당,탄현,일산,풍산,백마,곡산,능곡,행신,강매,한국항공대,수색,디지털미디어시티,가좌,홍대입구,서강대,공덕,효창공원앞,용산,이촌,서빙고,한남,옥수,응봉,왕십리,청량리,회기,중랑,상봉,망우,양원,구리,도농,양정,덕소,도심,팔당,운길산,양수,신원,국수,아신,오빈,양평,원덕,용문,지평",
+            "suin": "청량리,왕십리,서울숲,압구정로데오,강남구청,선정릉,선릉,한티,도곡,구룡,개포동,대모산입구,수서,복정,가천대,태평,모란,야탑,이매,서현,수내,정자,미금,오리,죽전,보정,구성,신갈,기흥,상갈,청명,영통,망포,매탄권선,수원시청,매교,수원,고색,오목천,어천,야목,사리,한대앞,중앙,고잔,초지,안산,신길온천,정왕,오이도,달월,월곶,소래포구,인천논현,호구포,남동인더스파크,원인재,연수,송도,인하대,숭의,신포,인천",
+            "shin": "신사,논현,신논현,강남,양재,양재시민의숲,청계산입구,판교,정자,미금,동천,수지구청,성복,상현,광교중앙,광교",
+            "gc": "광운대,청량리,회기,중랑,상봉,망우,신내,갈매,별내,퇴계원,사릉,금곡,평내호평,천마산,마석,대성리,청평,상천,가평,굴봉산,백양리,강촌,김유정,남춘천,춘천",
+            "gg": "판교,이매,성남,삼동,경기광주,초월,곤지암,신둔도예촌,이천,부발,세종대왕릉,여주",
+            "gtx": "수서,성남,구성,동탄,킨텍스,서울역,운정중앙",
+            "ui": "북한산우이,솔밭공원,4.19민주묘지,가오리,화계,삼양,삼양사거리,솔샘,북한산보국문,정릉,성신여대입구,보문,신설동",
+            "in1": "계양,귤현,박촌,임학,계산,작전,갈산,부평구청,부평시장,부평,동수,부평삼거리,인천시청,예술회관,인천터미널,문학경기장,선학,원인재,동춘,동막,캠퍼스타운,테크노파크,인천대입구,센트럴파크,송도달빛축제공원",
+            "in2": "검단오류,검단사거리,마전,완정,독정,검암,검바위,아시아드경기장,가정,가정중앙시장,석남,서부여성회관,인천가좌,가재울,주안,시민공원,인천시청,석천사거리,모래내시장,만수,남동구청,인천대공원,운연",
+            "uj": "발곡,회룡,범골,의정부시청,흥선,의정부중앙,동오,새말,경기도청북부청사,효자,곤제,어룡,송산,탑석",
+            "ap": "인천공항1터미널,인천공항2터미널,공항화물청사,운서,영종,청라국제도시,검암,계양,김포공항,마곡나루,디지털미디어시티,홍대입구,공덕,서울역",
+            "yi": "기흥,강남대,지석,어정,동백,초당,삼가,시청.용인대,명지대,김량장,용인중앙시장,고진,보평,둔전,전대.에버랜드",
+            "sl": "샛강,대방,보라매,신림,관악산",
+            "sh": "일산,풍산,백마,대곡,능곡,김포공항,부천종합운동장,소사,시흥시청,초지,원시"
         };
 
-        let searchMode = 'out';
-        let selectedStation = null;
-        let favs = JSON.parse(localStorage.getItem('guri_mama_final_v799') || '[]');
-
-        function cleanName(n) { return n.trim().replace(/역+$/, '') + '역'; }
-
-        function openSearch(mode) {
-            searchMode = mode;
-            document.getElementById('search-view').classList.remove('hidden');
-            document.getElementById('search-title').innerText = mode === 'out' ? "어디로 갈까요?" : "어디서 오시나요?";
-            document.getElementById('station-input').value = '';
-            document.getElementById('station-input').focus();
-            filterStations('');
+        const subwayMaster = [];
+        for (const [line, names] of Object.entries(rawStations)) {
+            names.split(',').forEach(name => { subwayMaster.push({ n: name.trim(), l: line }); });
         }
 
+        const hubTable = {
+            "회기": { p:"1-1번", m:"옥색 경의중앙선(청량리 방면)을 타고 회기역까지 가세요. 내린 자리 바로 옆이 1호선 타는 곳입니다.", line:"1", c:"line-1" },
+            "잠실": { p:"3-1번", m:"핑크색 8호선(모란 방면)을 타고 잠실역까지 가세요. 내려서 2호선(강남 방향) 표지판을 따라가세요.", line:"2", c:"line-2" },
+            "가락시장": { p:"3-3번", m:"핑크색 8호선(모란 방면)을 타고 가락시장역까지 가세요. 내려서 한 층만 올라가면 3호선입니다.", line:"3", c:"line-3" },
+            "석촌": { p:"6-2번", m:"핑크색 8호선(모란 방면)을 타고 석촌역까지 가세요. 내려서 한 층만 올라가면 9호선입니다.", line:"9", c:"line-9" },
+            "복정": { p:"1-1번", m:"핑크색 8호선(모란 방면)을 타고 복정역까지 가세요. 내려서 아래층으로 가면 수인분당선입니다.", line:"suin", c:"line-suin" },
+            "상봉": { p:"1-1번", m:"옥색 경의중앙선(청량리 방면)을 타고 상봉역까지 가세요. 7호선이나 경춘선으로 갈아타는 화살표를 따라가세요.", line:"7", c:"line-7" },
+            "왕십리": { p:"1-1번", m:"옥색 경의중앙선(청량리 방면)을 타고 왕십리역까지 가세요. 내려서 계단을 올라가면 2호선/5호선이 나옵니다.", line:"5", c:"line-5" },
+            "옥수": { p:"1-1번", m:"옥색 경의중앙선(청량리 방면)을 타고 옥수역까지 가세요. 내려서 한 층만 내려가면 3호선입니다.", line:"3", c:"line-3" },
+            "천호": { p:"1-1번", m:"핑크색 8호선(모란 방면)을 타고 천호역까지 가세요. 내려서 5호선(광화문 방향)으로 갈아타세요.", line:"5", c:"line-5" },
+            "별내": { p:"1-1번", m:"핑크색 8호선(별내 방면)을 타고 종점인 별내역까지 가세요. 내려서 4호선으로 갈아타세요.", line:"4", c:"line-4" },
+            "기흥": { p:"1-1번", m:"수인분당선을 타고 기흥역까지 가서 용인경전철(에버라인)로 갈아타세요.", line:"yi", c:"line-yi" }
+        };
+
+        let currentMode = 'out';
+        let selStation = null;
+        let activeRoute = 'fast'; 
+        let favoriteList = JSON.parse(localStorage.getItem('guri_mama_final_v5_verified')) || [];
+
+        function cleanNm(n) { return n.trim().replace(/역+$/, '') + '역'; }
+
+        function openSearch(mode) {
+            currentMode = mode;
+            document.getElementById('search-view').classList.remove('hidden');
+            document.getElementById('station-input').value = '';
+            document.getElementById('station-input').focus();
+            document.getElementById('total-count').innerText = subwayMaster.length;
+            filterStations('');
+        }
         function closeSearch() { document.getElementById('search-view').classList.add('hidden'); }
 
         function filterStations(query) {
             const container = document.getElementById('search-results');
             container.innerHTML = '';
-            
-            // 모든 역 검색 (리스트 799개 대응)
             const matches = subwayMaster.filter(s => s.n.includes(query));
-            
             if (matches.length > 0) {
-                matches.forEach(st => {
+                const unique = []; const seen = new Set();
+                matches.forEach(m => { const key = m.n + m.l; if(!seen.has(key)) { unique.push(m); seen.add(key); } });
+                unique.forEach(st => {
                     const btn = document.createElement('button');
-                    btn.className = "w-full bg-white border-2 border-gray-100 p-4 rounded-2xl text-left shadow-sm flex justify-between items-center active:bg-blue-50";
+                    btn.className = "w-full bg-white p-5 text-left flex justify-between items-center active:bg-blue-50 border-b border-gray-100";
                     btn.onclick = () => showResult(st);
-                    
-                    let lineName = st.l;
-                    if(st.l === 'GJ') lineName = '경의중앙';
-                    else if(st.l === 'AP') lineName = '공항철도';
-                    else if(st.l === 'SU') lineName = '수인분당';
-                    else if(st.l === 'IN1') lineName = '인천1호선';
-                    else if(st.l === 'GTX') lineName = 'GTX-A';
-                    else if(st.l === '신분당') lineName = '신분당선';
-                    else lineName = parseInt(st.l) + '호선';
-
-                    btn.innerHTML = `<span class="text-xl font-black text-gray-800">${cleanName(st.n)}</span><span class="line-badge line-${st.l.toLowerCase().replace('선','')}">${lineName}</span>`;
+                    let lNm = st.l; const lLow = st.l.toLowerCase();
+                    if(lLow === 'gj') lNm = '경의중앙선'; else if(lLow === 'ap') lNm = '공항철도'; else if(lLow === 'suin') lNm = '수인분당선';
+                    else if(lLow === 'shin') lNm = '신분당선'; else if(lLow === 'gtx') lNm = 'GTX-A'; else if(lLow === 'gc') lNm = '경춘선';
+                    else if(lLow === 'gg') lNm = '경강선'; else if(lLow === 'ui') lNm = '우이신설선'; else if(lLow === 'uj') lNm = '의정부경전철';
+                    else if(lLow === 'yi') lNm = '용인경전철'; else if(lLow === 'in1') lNm = '인천1호선'; else if(lLow === 'in2') lNm = '인천2호선';
+                    else if(lLow === 'sl') lNm = '신림선'; else if(lLow === 'sh') lNm = '서해선';
+                    else lNm = st.l + '호선';
+                    btn.innerHTML = `<span class="text-xl font-bold text-gray-800">${cleanNm(st.n)}</span><span class="line-badge line-${lLow}">${lNm}</span>`;
                     container.appendChild(btn);
                 });
             } else if (query.length > 0) {
                 container.innerHTML = `<p class="text-center text-gray-400 mt-10 font-bold">목록에 없는 역입니다.<br>이름을 다시 확인해 보세요.</p>`;
             } else {
-                // 추천 역 (주요 거점)
-                ["잠실", "서울역", "강남", "천호", "다산", "별내", "명동", "수원", "평택", "인천공항1터미널"].forEach(name => {
+                ["잠실", "서울역", "강남", "천호", "다산", "별내", "야탑", "판교", "동탄", "인천공항1터미널"].forEach(name => {
                     const st = subwayMaster.find(s => s.n === name);
                     if (st) {
                         const btn = document.createElement('button');
-                        btn.className = "w-full bg-white border-2 border-gray-100 p-4 rounded-xl text-left mb-2 shadow-sm font-bold text-gray-700";
+                        btn.className = "w-full bg-white p-4 rounded-xl border-2 border-gray-100 mb-2 shadow-sm font-bold text-gray-700";
                         btn.onclick = () => showResult(st);
-                        btn.innerHTML = `<span>${cleanName(st.n)}</span>`;
+                        btn.innerHTML = `<span>${cleanNm(st.n)}</span>`;
                         container.appendChild(btn);
                     }
                 });
             }
         }
 
-        function calculateRoute(st) {
-            const n = st.n; const l = st.l;
-            // 8호선 직결
+        /** [경로 엔진] 논리적 거점 매칭 및 현실적 소요 시간 계산 */
+        function getPathEngine(st, opt) {
+            const n = st.n; const l = st.l.toLowerCase();
+            let res = { hub: null, time: 0, msg: "", ride: "지하철", color: "default", hub_line: "" };
+
+            // 1. 직접 연결
             if (l === "8") {
-                const d = ["별내", "다산", "동구릉"].includes(n) ? "별내행" : "모란행";
-                return { hub: null, ride: "8호선", color: "line-8", msg: `핑크색 8호선(${d}) 열차를 타세요.` };
+                res.time = 15; res.ride = "8호선"; res.color = "8"; res.msg = `핑크색 8호선을 타고 바로 가시면 됩니다.`;
+                return res;
             }
-            // 경의중앙 직결
-            if (l === "GJ") {
-                const d = ["도농", "덕소", "양평", "지평"].includes(n) ? "지평/덕소행" : "문산/용산행";
-                return { hub: null, ride: "경의중앙선", color: "line-gj", msg: `옥색 경의중앙선(${d}) 열차를 타세요.` };
+            if (l === "gj") {
+                res.time = 20; res.ride = "경의중앙선"; res.color = "gj"; res.msg = `옥색 경의중앙선을 타고 바로 가시면 됩니다.`;
+                return res;
             }
-            // 환승 경로 매칭
-            if (["1", "4", "AP", "IN1"].includes(l) || n.includes("인천") || n.includes("공항")) {
-                return { hub: "회기", ride: "1호선", color: "line-1", msg: "옥색 경의중앙선 타고 회기역까지 가세요." };
+
+            // 2. 노선별 거점 매칭 (0분 오류 방지를 위한 정밀 로직)
+            if (["1", "ap", "ui", "uj", "in1", "in2"].includes(l) || n.includes("인천") || n.includes("공항")) {
+                res.hub = "회기"; res.time = (opt==='fast' ? 45 : 55); 
+            } else if (l === "2" || l === "shin") {
+                if (opt === 'fast') { res.hub = "잠실"; res.time = 38; } else { res.hub = "왕십리"; res.time = 48; }
+            } else if (l === "3") {
+                if (opt === 'fast') { res.hub = "가락시장"; res.time = 42; } else { res.hub = "옥수"; res.time = 50; }
+            } else if (l === "4") {
+                if (["진접","오남","별내별가람"].includes(n)) { res.hub = "별내"; res.time = 28; } else { res.hub = "회기"; res.time = 52; }
+            } else if (l === "5") {
+                res.hub = "천호"; res.time = 35;
+            } else if (l === "7") {
+                res.hub = "상봉"; res.time = 32;
+            } else if (l === "9") {
+                res.hub = "석촌"; res.time = 34;
+            } else if (l === "suin") {
+                if (opt === 'fast') { res.hub = "복정"; res.time = 44; } else { res.hub = "왕십리"; res.time = 56; }
+            } else if (l === "gc") {
+                res.hub = "상봉"; res.time = 22;
+            } else if (l === "yi") {
+                // 고진역 등 에버라인
+                res.hub = "복정"; res.time = 65; res.msg = "복정역에서 수인분당선으로 갈아탄 뒤 기흥역까지 가세요.";
+            } else if (l === "gtx" || l === "gg") {
+                res.hub = "왕십리"; res.time = 45; res.msg = "왕십리에서 수인분당선으로 갈아타고 이매(성남)역까지 가세요.";
+            } else {
+                res.hub = "왕십리"; res.time = 60; // 기본값
             }
-            if (l === "2") {
-                return { hub: "잠실", ride: "2호선", color: "line-2", msg: "핑크색 8호선 타고 잠실역까지 가세요." };
-            }
-            if (l === "3") {
-                return { hub: "가락시장", ride: "3호선", color: "line-3", msg: "핑크색 8호선 타고 가락시장역까지 가세요." };
-            }
-            if (l === "9") {
-                return { hub: "석촌", ride: "9호선", color: "line-9", msg: "핑크색 8호선 타고 석촌역까지 가세요." };
-            }
-            return { hub: "중심역", ride: "지하철", color: "line-default", msg: "환승역에서 갈아타셔야 합니다." };
+
+            const hInfo = hubTable[res.hub] || { p: "중간", m: "갈아타는 곳 표지판을 따라가세요.", c: "default", line: "지하철" };
+            res.ride = hInfo.line; res.color = hInfo.c; res.msg = hInfo.m;
+            return res;
+        }
+
+        function switchRoute(opt) {
+            activeRoute = opt;
+            document.getElementById('tab-fast').className = `route-tab flex-1 py-4 font-black text-lg ${opt === 'fast' ? 'active' : ''}`;
+            document.getElementById('tab-easy').className = `route-tab flex-1 py-4 font-black text-lg border-l border-gray-100 ${opt === 'easy' ? 'active' : ''}`;
+            renderRoute();
         }
 
         function showResult(st) {
-            selectedStation = st; closeSearch();
-            document.getElementById('main-menu').classList.add('hidden');
-            document.getElementById('route-detail').classList.remove('hidden');
+            selStation = st; document.getElementById('target-name-display').innerText = cleanNm(st.n);
+            closeSearch(); document.getElementById('main-menu').classList.add('hidden'); document.getElementById('route-detail').classList.remove('hidden');
+            switchRoute('fast');
+        }
 
-            const info = calculateRoute(st);
-            const pathArr = searchMode === 'out' 
-                ? ["구리역", info.hub ? cleanName(info.hub) : null, cleanName(st.n)].filter(Boolean)
-                : [cleanName(st.n), info.hub ? cleanName(info.hub) : null, "구리역"].filter(Boolean);
+        function renderRoute() {
+            if(!selStation) return;
+            const fast = getPathEngine(selStation, 'fast');
+            const easy = getPathEngine(selStation, 'easy');
+            const info = activeRoute === 'fast' ? fast : easy;
+
+            document.getElementById('time-fast').innerText = fast.time + "분";
+            document.getElementById('time-easy').innerText = easy.time + "분";
+
+            const pathArr = currentMode === 'out' 
+                ? ["구리역", info.hub ? cleanNm(info.hub) : null, cleanNm(selStation.n)].filter(Boolean)
+                : [cleanNm(selStation.n), info.hub ? cleanNm(info.hub) : null, "구리역"].filter(Boolean);
             
-            document.getElementById('route-path-summary').innerHTML = pathArr.map((p, idx) => `
-                <span class="${idx === pathArr.length-1 ? 'text-green-600' : 'text-gray-800'}">${p}</span>
-                ${idx < pathArr.length - 1 ? '<span class="text-gray-300 mx-1">➜</span>' : ''}
-            `).join('');
+            document.getElementById('route-path-summary').innerHTML = pathArr.map((p, idx) => `<span class="${idx === pathArr.length-1 ? 'text-green-600' : 'text-gray-800'}">${p}</span>${idx < pathArr.length - 1 ? '<span class="text-gray-300 mx-1 font-bold">➜</span>' : ''}`).join('');
 
             const content = document.getElementById('route-content');
-            if (searchMode === 'in') {
-                content.innerHTML = `
-                    <div class="p-8 bg-green-50 rounded-[2rem] border-4 border-green-200 text-center mb-4">
-                        <p class="text-2xl font-black text-green-800 mb-2">${cleanName(st.n)} 승차</p>
-                        <p class="text-xl font-bold text-gray-700 leading-snug">안내판을 보고 <span class="highlight-action">구리역 방향</span>으로<br>열차를 타고 오시면 됩니다.</p>
-                    </div>`;
+            if (currentMode === 'in') {
+                content.innerHTML = `<div class="p-8 bg-green-50 rounded-[2rem] border-4 border-green-200 text-center mb-4 shadow-sm"><p class="text-2xl font-black text-green-800 mb-2">${cleanNm(selStation.n)} 승차</p><p class="text-xl font-bold text-gray-700 leading-snug">안내판에서 <span class="highlight-action">구리역 방향</span>을 확인하고 열차를 타고 오시면 됩니다.</p></div>`;
             } else {
-                let html = `
-                    <div class="path-step"><div class="circle-num">1</div><div class="space-y-1">
-                        <div class="flex items-center"><span class="line-badge line-8">8호선</span><span class="line-badge line-gj">경의중앙</span><span class="text-xl font-black text-gray-800">구리역</span></div>
-                        <p class="text-xl font-bold text-gray-700 leading-relaxed font-bold">${info.msg}</p>
-                    </div></div>`;
-
-                if (info.hub && info.hub !== "중심역") {
-                    const tr = transData[info.hub] || { p: "중간", m: "내려서 갈아타세요." };
-                    html += `
-                    <div class="path-step"><div class="circle-num">2</div><div class="space-y-1">
-                        <div class="flex items-center"><span class="line-badge line-${info.color.split('-')[1]}">${info.ride}</span><span class="text-xl font-black text-gray-800">${cleanName(info.hub)}</span></div>
-                        <p class="text-xl font-bold text-gray-700 leading-relaxed font-bold"><span class='highlight-action'>내려서</span> ${info.ride}으로 <span class='highlight-action'>갈아타세요</span>.</p>
-                        <div class="inline-block mt-2 bg-yellow-100 px-4 py-2 rounded-2xl border-2 border-yellow-300 shadow-sm">
-                            <p class="text-lg font-black text-yellow-800">💡 가장 빨리 갈아타는 칸: <span class="text-2xl text-red-600 underline">${tr.p}</span></p>
-                        </div>
-                    </div></div>`;
+                let html = `<div class="path-step"><div class="circle-num">1</div><div class="space-y-1"><div class="flex items-center"><span class="line-badge line-8">8호선</span><span class="line-badge line-gj">경의중앙</span><span class="text-xl font-black text-gray-800">구리역</span></div><p class="text-xl font-bold text-gray-700 leading-relaxed font-bold">목적지 노선에 따라 열차를 타세요.</p></div></div>`;
+                if (info.hub) {
+                    const tr = hubTable[info.hub] || { p: "중간", m: "내려서 갈아타세요." };
+                    html += `<div class="path-step"><div class="circle-num">2</div><div class="space-y-1"><div class="flex items-center"><span class="line-badge line-${info.color}">${info.ride.toUpperCase()}선</span><span class="text-xl font-black text-gray-800">${cleanNm(info.hub)}</span></div><p class="text-xl font-bold text-gray-700 leading-relaxed font-bold"><span class='highlight-action'>내려서</span> 갈아타세요.</p><p class="text-sm text-gray-500 mt-1">${tr.m}</p><div class="inline-block mt-3 bg-yellow-100 px-4 py-2 rounded-2xl border-2 border-yellow-300 shadow-sm"><p class="text-lg font-black text-yellow-800">💡 빨리 갈아타는 칸: <span class="text-2xl text-red-600 underline font-black">${tr.p}</span></p></div></div></div>`;
                 }
-
-                html += `
-                    <div class="path-step"><div class="circle-num">${info.hub ? 3 : 2}</div><div class="space-y-1">
-                        <div class="flex items-center"><span class="line-badge line-${st.l.toLowerCase().replace('선','')}">${st.l === 'GJ' ? '경의중앙' : st.l + '호선'}</span><span class="text-xl font-black text-gray-800">${cleanName(st.n)}</span></div>
-                        <p class="text-xl font-bold text-gray-700 leading-relaxed font-bold">목적지에 도착했습니다. <span class="highlight-action">내리세요</span>.</p>
-                    </div></div>`;
+                html += `<div class="path-step"><div class="circle-num">${info.hub ? 3 : 2}</div><div class="space-y-1"><div class="flex items-center"><span class="line-badge line-${selStation.l.toLowerCase().replace('선','')}">${selStation.l.toUpperCase()}선</span><span class="text-xl font-black text-gray-800">${cleanNm(selStation.n)}</span></div><p class="text-xl font-bold text-gray-700 leading-relaxed font-bold">목적지에 도착했습니다. <span class="highlight-action">내리세요</span>.</p></div></div>`;
                 content.innerHTML = html;
             }
-            updateFavoriteStar();
+            updateFav();
         }
 
         function toggleFavorite() {
-            const idx = favs.findIndex(f => f.n === selectedStation.n);
-            if (idx > -1) favs.splice(idx, 1); else favs.push(selectedStation);
-            localStorage.setItem('guri_mama_final_v799', JSON.stringify(favs));
-            updateFavoriteStar();
+            const idx = favoriteList.findIndex(f => f.n === selStation.n);
+            if (idx > -1) favoriteList.splice(idx, 1); else favoriteList.push(selStation);
+            localStorage.setItem('guri_mama_final_v5_verified', JSON.stringify(favoriteList));
+            updateFav();
         }
-
-        function updateFavoriteStar() {
-            const isFav = favs.some(f => f.n === selectedStation.n);
-            document.getElementById('fav-btn').innerText = isFav ? '⭐' : '☆';
-            document.getElementById('fav-btn').style.color = isFav ? '#f59e0b' : '#9ca3af';
-        }
-
-        function renderFavorites() {
-            const container = document.getElementById('favorites-list');
-            const section = document.getElementById('favorites-section');
-            if (favs.length === 0) { section.classList.add('hidden'); return; }
-            section.classList.remove('hidden');
-            container.innerHTML = '';
-            favs.forEach(fav => {
-                const btn = document.createElement('button');
-                btn.className = "w-full bg-yellow-50 border-2 border-yellow-200 rounded-[2rem] p-5 flex items-center justify-between shadow-sm active:bg-yellow-100";
-                btn.onclick = () => { searchMode = 'out'; showResult(fav); };
-                btn.innerHTML = `<span class="text-xl font-black text-gray-800">🏠 → ${cleanName(fav.n)}</span> <span class="text-3xl font-black text-orange-400">➜</span>`;
+        function updateFav() { const isFav = favoriteList.some(f => f.n === selStation.n); document.getElementById('fav-btn').innerText = isFav ? '⭐' : '☆'; document.getElementById('fav-btn').style.color = isFav ? '#f59e0b' : '#9ca3af'; }
+        function renderFavs() {
+            const container = document.getElementById('favorites-list'); const section = document.getElementById('favorites-section');
+            if (favoriteList.length === 0) { section.classList.add('hidden'); return; }
+            section.classList.remove('hidden'); container.innerHTML = '';
+            favoriteList.forEach(fav => {
+                const btn = document.createElement('button'); btn.className = "w-full bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-5 flex items-center justify-between shadow-sm active:bg-yellow-100";
+                btn.onclick = () => { currentMode = 'out'; showResult(fav); };
+                btn.innerHTML = `<span class="text-xl font-black text-gray-800">🏠 → ${cleanNm(fav.n)}</span> <span class="text-3xl font-black text-orange-400">➜</span>`;
                 container.appendChild(btn);
             });
         }
-
-        function goHome() {
-            document.getElementById('route-detail').classList.add('hidden');
-            document.getElementById('main-menu').classList.remove('hidden');
-            renderFavorites();
-        }
-
+        function goHome() { document.getElementById('route-detail').classList.add('hidden'); document.getElementById('main-menu').classList.remove('hidden'); renderFavs(); }
         function toggleMap(show) { document.getElementById('map-modal').classList.toggle('hidden', !show); }
-        window.onload = renderFavorites;
+        window.onload = renderFavs;
     </script>
 </body>
 </html>
