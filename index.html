@@ -13,7 +13,7 @@
             background-color: #f8fafc;
             -webkit-tap-highlight-color: transparent;
             overflow-x: hidden;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
         }
         
         .big-button {
@@ -31,24 +31,23 @@
             border-radius: 15px;
             color: white;
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             margin-right: 4px;
         }
 
-        /* 노선별 대표 색상 */
+        /* 노선 색상 정의 */
         .line-1 { background-color: #0052A4; } .line-2 { background-color: #009D3E; }
         .line-3 { background-color: #EF7C1C; } .line-4 { background-color: #00A5DE; }
         .line-5 { background-color: #996CAC; } .line-6 { background-color: #CD7C2F; }
         .line-7 { background-color: #747F00; } .line-8 { background-color: #e6186c; }
         .line-9 { background-color: #BDB092; } .line-gj { background-color: #77c4a3; }
-        .line-gc { background-color: #0C8E72; } .line-gtx { background-color: #A6142F; }
-        .line-suin { background-color: #F5A200; } .line-shin { background-color: #D4003B; }
-        .line-default { background-color: #64748b; }
+        .line-gc { background-color: #0C8E72; } .line-suin { background-color: #F5A200; }
+        .line-shin { background-color: #D4003B; } .line-gtx { background-color: #A6142F; }
 
         .path-step {
             position: relative;
             padding-left: 45px;
-            padding-bottom: 30px;
+            padding-bottom: 25px;
         }
         .path-step::before {
             content: '';
@@ -56,7 +55,7 @@
             left: 17px;
             top: 15px;
             bottom: -5px;
-            width: 4px;
+            width: 3px;
             background-color: #e2e8f0;
             border-radius: 2px;
         }
@@ -78,17 +77,11 @@
             z-index: 10;
         }
 
-        .action-text {
-            color: #1e293b;
-            font-weight: 700;
-            font-size: 1.2rem;
-            line-height: 1.5;
-        }
-
         .highlight-action {
             color: #dc2626;
             font-weight: 800;
             text-decoration: underline;
+            text-underline-offset: 3px;
         }
 
         #map-modal {
@@ -101,24 +94,12 @@
         }
 
         #station-input { font-size: 1.5rem; }
-
-        /* 메시지 박스 스타일 */
-        #message-box {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 200;
-            width: 85%;
-            max-width: 350px;
-        }
     </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen bg-gray-50 pb-16">
 
     <header class="bg-blue-600 text-white p-6 text-center shadow-lg">
-        <h1 class="text-2xl font-black mb-1 tracking-tight">지하철 도우미</h1>
+        <h1 class="text-2xl font-black mb-1">지하철 도우미</h1>
         <p class="text-base opacity-90 font-bold">어머니, 오늘 어디 가시나요?</p>
     </header>
 
@@ -141,7 +122,7 @@
                 <span class="text-5xl">🚉</span>
             </button>
 
-            <button onclick="toggleMap(true)" class="big-button w-full bg-orange-400 border-2 border-orange-500 rounded-2xl p-4 text-center">
+            <button onclick="toggleMap(true)" class="big-button w-full bg-orange-400 border-2 border-orange-500 rounded-2xl p-4 text-center shadow-md">
                 <span class="text-xl font-black text-white">🗺️ 노선도 크게 보기</span>
             </button>
 
@@ -163,7 +144,7 @@
                    class="w-full border-b-4 border-blue-500 p-3 font-black focus:outline-none placeholder-gray-300">
             
             <div id="search-results" class="flex-1 overflow-y-auto space-y-3 mt-4 pb-6">
-                <!-- 추천 역 목록이 여기에 뜹니다 -->
+                <!-- 역 목록 자동 생성 -->
             </div>
         </div>
 
@@ -174,8 +155,7 @@
                 <button id="fav-btn" onclick="toggleFavorite()" class="text-4xl">☆</button>
             </div>
             
-            <!-- 여정 요약 -->
-            <div id="route-path-summary" class="flex flex-wrap items-center justify-center gap-1 p-3 bg-gray-50 rounded-2xl border border-gray-100"></div>
+            <div id="route-path-summary" class="flex flex-wrap items-center justify-center gap-1 p-3 bg-gray-50 rounded-2xl border border-gray-100 font-bold"></div>
 
             <div id="route-content" class="space-y-4"></div>
 
@@ -183,62 +163,83 @@
                 🗺️ 지도에서 확인
             </button>
         </div>
-
-        <!-- 로딩 -->
-        <div id="loading" class="hidden fixed inset-0 bg-black/40 z-[100] flex items-center justify-center">
-            <div class="bg-white p-8 rounded-3xl text-center shadow-2xl">
-                <div class="inline-block w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-                <p class="text-xl font-bold text-gray-800">길을 찾는 중입니다...</p>
-            </div>
-        </div>
     </main>
-
-    <!-- 메시지 박스 -->
-    <div id="message-box" class="bg-white p-6 rounded-3xl border-4 border-red-400 shadow-2xl text-center">
-        <p id="message-text" class="text-lg font-bold text-gray-800 mb-4"></p>
-        <button onclick="hideMessage()" class="bg-gray-500 text-white px-6 py-2 rounded-xl font-bold shadow-md">확인</button>
-    </div>
 
     <!-- 지도 모달 -->
     <div id="map-modal">
         <div class="min-h-screen flex flex-col p-4">
             <button onclick="toggleMap(false)" class="sticky top-4 self-end bg-white border-2 border-black text-black px-6 py-2 rounded-full text-xl font-bold shadow-2xl z-[110]">닫기 ✕</button>
-            <div class="overflow-auto mt-4 flex-1 rounded-2xl bg-white shadow-inner">
+            <div class="overflow-auto mt-4 flex-1 rounded-2xl bg-white">
                 <img src="map_korea.jpg" alt="노선도" class="max-w-none w-[400%]" id="map-img">
             </div>
         </div>
     </div>
 
     <script>
-        // 중요: 본인의 Gemini API 키를 적용하였습니다.
-        const apiKey = "AIzaSyCYvh4JPmjVSwwqGloYMKMK1MrgRUeGDOk"; 
-        
+        // [핵심] API 없이 로컬에서 작동하는 노선 데이터베이스
+        const subwayDB = [
+            { name: "잠실역", line: "8", color: "line-8", hub: "없음", steps: [
+                { type: "ride", line: "8", color: "line-8", station: "구리역", msg: "핑크색 8호선(모란행) 열차를 타세요." },
+                { type: "arrive", station: "잠실역", msg: "도착했습니다. 여기서 내리세요." }
+            ]},
+            { name: "서울역", line: "1", color: "line-1", hub: "회기역", steps: [
+                { type: "ride", line: "경의중앙", color: "line-gj", station: "구리역", msg: "옥색 경의중앙선(문산행)을 타세요." },
+                { type: "transfer", line: "1", color: "line-1", station: "회기역", pos: "1-1번", msg: "내려서 바로 옆 1호선(인천행)으로 갈아타세요." },
+                { type: "arrive", station: "서울역", msg: "도착했습니다. 여기서 내리세요." }
+            ]},
+            { name: "강남역", line: "2", color: "line-2", hub: "잠실역", steps: [
+                { type: "ride", line: "8", color: "line-8", station: "구리역", msg: "핑크색 8호선(모란행) 열차를 타세요." },
+                { type: "transfer", line: "2", color: "line-2", station: "잠실역", pos: "3-1번", msg: "내려서 2호선(교대방향)으로 갈아타세요." },
+                { type: "arrive", station: "강남역", msg: "도착했습니다. 여기서 내리세요." }
+            ]},
+            { name: "천호역", line: "8", color: "line-8", hub: "없음", steps: [
+                { type: "ride", line: "8", color: "line-8", station: "구리역", msg: "핑크색 8호선(모란행)을 타세요." },
+                { type: "arrive", station: "천호역", msg: "도착했습니다. 여기서 내리세요." }
+            ]},
+            { name: "다산역", line: "8", color: "line-8", hub: "없음", steps: [
+                { type: "ride", line: "8", color: "line-8", station: "구리역", msg: "핑크색 8호선(별내행)을 타세요." },
+                { type: "arrive", station: "다산역", msg: "바로 다음 역입니다. 내리세요." }
+            ]},
+            { name: "별내역", line: "8", color: "line-8", hub: "없음", steps: [
+                { type: "ride", line: "8", color: "line-8", station: "구리역", msg: "핑크색 8호선(별내행)을 타세요." },
+                { type: "arrive", station: "별내역", msg: "두 번째 정거장입니다. 내리세요." }
+            ]},
+            { name: "왕십리역", line: "경의중앙", color: "line-gj", hub: "없음", steps: [
+                { type: "ride", line: "경의중앙", color: "line-gj", station: "구리역", msg: "옥색 경의중앙선(문산행)을 타세요." },
+                { type: "arrive", station: "왕십리역", msg: "도착했습니다. 여기서 내리세요." }
+            ]},
+            { name: "청량리역", line: "경의중앙", color: "line-gj", hub: "없음", steps: [
+                { type: "ride", line: "경의중앙", color: "line-gj", station: "구리역", msg: "옥색 경의중앙선(문산행)을 타세요." },
+                { type: "arrive", station: "청량리역", msg: "도착했습니다. 여기서 내리세요." }
+            ]},
+            { name: "고속터미널역", line: "3", color: "line-3", hub: "가락시장역", steps: [
+                { type: "ride", line: "8", color: "line-8", station: "구리역", msg: "핑크색 8호선(모란행)을 타세요." },
+                { type: "transfer", line: "3", color: "line-3", station: "가락시장역", pos: "3-3번", msg: "내려서 3호선(대화방향)으로 갈아타세요." },
+                { type: "arrive", station: "고속터미널역", msg: "도착했습니다. 여기서 내리세요." }
+            ]},
+            { name: "명동역", line: "4", color: "line-4", hub: "동대문역", steps: [
+                { type: "ride", line: "경의중앙", color: "line-gj", station: "구리역", msg: "경의중앙선을 타고 회기역에서 1호선으로 갈아타세요." },
+                { type: "transfer", line: "4", color: "line-4", station: "동대문역", pos: "10-4번", msg: "동대문역에서 내려서 4호선으로 갈아타세요." },
+                { type: "arrive", station: "명동역", msg: "도착했습니다. 여기서 내리세요." }
+            ]},
+            { name: "상봉역", line: "7", color: "line-gj", hub: "없음", steps: [
+                { type: "ride", line: "경의중앙", color: "line-gj", station: "구리역", msg: "옥색 경의중앙선(문산행)을 타세요." },
+                { type: "arrive", station: "상봉역", msg: "도착했습니다. 여기서 내리세요." }
+            ]},
+            { name: "건대입구역", line: "2", color: "line-2", hub: "잠실역", steps: [
+                { type: "ride", line: "8", color: "line-8", station: "구리역", msg: "핑크색 8호선(모란행) 열차를 타세요." },
+                { type: "transfer", line: "2", color: "line-2", station: "잠실역", pos: "3-1번", msg: "내려서 2호선(성수방향)으로 갈아타세요." },
+                { type: "arrive", station: "건대입구역", msg: "도착했습니다. 여기서 내리세요." }
+            ]}
+        ];
+
         let currentTarget = null;
         let searchMode = 'out';
-        
-        let favorites = JSON.parse(localStorage.getItem('guri_mama_v16') || '[]');
-        let routeCache = JSON.parse(localStorage.getItem('guri_route_cache_v16') || '{}');
-
-        // 주요 역 목록 (추천용) - 노선도에 있는 주요 역들을 더 많이 추가
-        const commonStations = [
-            "잠실역", "서울역", "강남역", "천호역", "다산역", "별내역", "왕십리역", "청량리역", "명동역", 
-            "홍대입구역", "고속터미널역", "신도림역", "동대문역", "건대입구역", "가락시장역", "복정역", 
-            "석촌역", "종로3가역", "을지로입구역", "신촌역", "수원역", "인천역", "동탄역", "판교역", 
-            "상봉역", "도농역", "덕소역", "양평역", "회기역", "옥수역", "금정역", "노원역", "장자호수공원역"
-        ];
+        let favorites = JSON.parse(localStorage.getItem('guri_mama_final_local') || '[]');
 
         function formatStationName(name) {
             if (!name) return "";
             return name.trim().replace(/역+$/, '') + '역';
-        }
-
-        function showMessage(text) {
-            document.getElementById('message-text').innerText = text;
-            document.getElementById('message-box').style.display = 'block';
-        }
-
-        function hideMessage() {
-            document.getElementById('message-box').style.display = 'none';
         }
 
         function openSearch(mode) {
@@ -257,166 +258,73 @@
             const container = document.getElementById('search-results');
             container.innerHTML = '';
             
-            if (query.length > 0) {
-                // 1. "직접 찾기" 버튼
-                const mainBtn = document.createElement('button');
-                mainBtn.className = "w-full bg-blue-50 border-2 border-blue-300 p-5 rounded-2xl text-left shadow-sm flex justify-between items-center mb-6";
-                mainBtn.onclick = () => findRoute(query);
-                mainBtn.innerHTML = `<span class="text-xl font-bold text-blue-900">'${formatStationName(query)}' 길찾기</span> <span class="text-2xl">🔍</span>`;
-                container.appendChild(mainBtn);
-
-                // 2. 실시간 추천 목록 (입력한 글자가 포함된 역들)
-                const matches = commonStations.filter(s => s.includes(query));
-                if (matches.length > 0) {
-                    const label = document.createElement('p');
-                    label.className = "text-sm text-gray-500 mb-2 ml-1 font-bold";
-                    label.innerText = "혹시 이 역을 찾으시나요?";
-                    container.appendChild(label);
-
-                    matches.forEach(name => {
-                        const btn = document.createElement('button');
-                        btn.className = "w-full bg-white border-2 border-gray-100 p-4 rounded-xl text-left shadow-sm mb-2 active:bg-gray-50";
-                        btn.onclick = () => findRoute(name);
-                        btn.innerHTML = `<span class="text-lg font-bold text-gray-800">${name}</span>`;
-                        container.appendChild(btn);
-                    });
-                }
-            } else {
-                // 검색어가 없을 때 보여줄 기본 인기 역 목록
-                const recentLabel = document.createElement('p');
-                recentLabel.className = "text-sm text-gray-500 mb-3 ml-1 font-bold";
-                recentLabel.innerText = "가실 곳을 선택하거나 이름을 쓰세요";
-                container.appendChild(recentLabel);
-
-                commonStations.slice(0, 12).forEach(name => {
+            const matches = subwayDB.filter(s => s.name.includes(query));
+            
+            if (matches.length > 0) {
+                matches.forEach(st => {
                     const btn = document.createElement('button');
-                    btn.className = "w-full bg-white border-2 border-gray-100 p-4 rounded-xl text-left shadow-sm mb-2 active:bg-gray-50";
-                    btn.onclick = () => findRoute(name);
-                    btn.innerHTML = `<span class="text-lg font-bold text-gray-800">${name}</span>`;
+                    btn.className = "w-full bg-white border-2 border-gray-100 p-5 rounded-2xl text-left shadow-sm flex justify-between items-center mb-2 active:bg-blue-50";
+                    btn.onclick = () => showRoute(st);
+                    btn.innerHTML = `
+                        <span class="text-lg font-bold text-gray-800">${st.name}</span>
+                        <span class="line-badge line-${st.line.toLowerCase()}">${st.line}호선</span>
+                    `;
                     container.appendChild(btn);
                 });
+            } else {
+                container.innerHTML = `<p class="text-center text-gray-400 mt-10">찾으시는 역이 목록에 없네요.<br>주요 역 이름을 다시 입력해 보세요.</p>`;
             }
         }
 
-        async function fetchRouteWithRetry(start, end, maxRetries = 5) {
-            const delays = [1000, 2000, 4000, 8000, 16000];
-            const systemPrompt = `지하철 안내 전문가입니다. 80대 어머니를 위해 중복 단어를 빼고 아주 간결하게 답하세요.
-            반드시 다음 JSON 형식으로만 응답하세요:
-            {
-                "path": ["출발역", "환승역(있는경우)", "도착역"],
-                "steps": [
-                    {"type": "ride", "station": "출발역", "line": "8", "color": "line-8", "msg": "8호선(모란행) 타세요."},
-                    {"type": "transfer", "station": "환승역", "line": "2", "color": "line-2", "pos": "3-1번", "msg": "내려서 2호선(교대방향) 갈아타세요."},
-                    {"type": "arrive", "station": "도착역", "msg": "여기서 내리세요."}
-                ]
-            }
-            규칙: msg 안에는 역 이름을 다시 쓰지 마세요. 환승 단계에만 '내려서'를 쓰고 뒤에 행선지를 꼭 쓰세요.`;
-
-            for (let i = 0; i < maxRetries; i++) {
-                try {
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: `${start}에서 ${end}까지 지하철로 가는 법` }] }],
-                            systemInstruction: { parts: [{ text: systemPrompt }] },
-                            generationConfig: { responseMimeType: "application/json" }
-                        })
-                    });
-
-                    if (response.status === 403 || response.status === 401) {
-                        throw new Error("API 키가 잘못되었거나 설정되지 않았습니다.");
-                    }
-
-                    if (!response.ok) throw new Error(`서버 오류 (${response.status})`);
-
-                    const result = await response.json();
-                    const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (!rawText) throw new Error("답변 데이터가 비어있습니다.");
-                    
-                    // JSON만 정교하게 추출
-                    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-                    if (!jsonMatch) throw new Error("데이터 형식이 올바르지 않습니다.");
-                    
-                    return JSON.parse(jsonMatch[0]);
-                } catch (err) {
-                    console.error(`시도 ${i+1} 실패:`, err);
-                    if (err.message.includes("API 키")) throw err;
-                    if (i === maxRetries - 1) throw err;
-                    await new Promise(r => setTimeout(r, delays[i]));
-                }
-            }
-        }
-
-        async function findRoute(targetStation) {
-            const formattedTarget = formatStationName(targetStation);
-            const cacheKey = `${searchMode}_${formattedTarget}`;
-            
-            if (routeCache[cacheKey]) {
-                closeSearch();
-                renderRoute(routeCache[cacheKey], targetStation);
-                return;
-            }
-
+        function showRoute(st) {
+            currentTarget = st;
             closeSearch();
-            document.getElementById('loading').classList.remove('hidden');
-            
-            const start = searchMode === 'out' ? '구리역' : formattedTarget;
-            const end = searchMode === 'out' ? formattedTarget : '구리역';
-
-            try {
-                const route = await fetchRouteWithRetry(start, end);
-                routeCache[cacheKey] = route;
-                localStorage.setItem('guri_route_cache_v16', JSON.stringify(routeCache));
-                renderRoute(route, targetStation);
-            } catch (error) {
-                console.error("최종 길찾기 오류:", error);
-                if (error.message.includes("API 키")) {
-                    showMessage("프로그램 설정(API 키)이 필요합니다. Vercel 배포 가이드를 확인해 주세요.");
-                } else {
-                    showMessage("연결이 불안정합니다. 잠시 후 다시 시도하시거나 지도를 확인해주세요.");
-                }
-            } finally {
-                document.getElementById('loading').classList.add('hidden');
-            }
-        }
-
-        function renderRoute(route, originalTarget) {
-            currentTarget = { name: originalTarget, data: route };
             document.getElementById('main-menu').classList.add('hidden');
             document.getElementById('route-detail').classList.remove('hidden');
 
             const summary = document.getElementById('route-path-summary');
-            summary.innerHTML = route.path.map((p, idx) => `
-                <span class="text-sm font-bold ${idx === route.path.length-1 ? 'text-green-600' : 'text-gray-800'}">${formatStationName(p)}</span>
-                ${idx < route.path.length - 1 ? '<span class="text-xs text-gray-300 mx-1">➜</span>' : ''}
+            const path = searchMode === 'out' ? ["구리역", st.hub !== "없음" ? st.hub : null, st.name].filter(Boolean) : [st.name, st.hub !== "없음" ? st.hub : null, "구리역"].filter(Boolean);
+            
+            summary.innerHTML = path.map((p, idx) => `
+                <span class="text-sm font-bold ${idx === path.length-1 ? 'text-green-600' : 'text-gray-800'}">${p}</span>
+                ${idx < path.length - 1 ? '<span class="text-xs text-gray-300 mx-1">➜</span>' : ''}
             `).join('');
 
             const content = document.getElementById('route-content');
-            content.innerHTML = route.steps.map((step, idx) => {
-                let msgHtml = step.msg;
-                if (step.type === 'transfer') {
-                    msgHtml = msgHtml.replace("내려서", "<span class='highlight-action'>내려서</span>").replace("갈아타세요", "<span class='highlight-action'>갈아타세요</span>");
-                } else if (step.type === 'arrive' || step.msg.includes("내리세요")) {
-                    msgHtml = msgHtml.replace("내리세요", "<span class='highlight-action'>내리세요</span>");
-                }
-
-                return `
-                <div class="path-step">
-                    <div class="circle-num">${idx + 1}</div>
-                    <div class="space-y-1">
-                        <div class="flex items-center">
-                            <span class="line-badge ${step.color || 'line-default'}">${step.line || ''}</span>
-                            <span class="text-lg font-black text-gray-800">${formatStationName(step.station)}</span>
-                        </div>
-                        <p class="action-text">${msgHtml}</p>
-                        ${step.pos ? `
-                        <div class="inline-block mt-1 bg-green-50 px-2 py-0.5 rounded-lg border border-green-200 shadow-sm">
-                            <p class="text-xs font-bold text-green-800">💡 빨리 갈아타는 칸: <span class="text-red-600 underline">${step.pos}</span></p>
-                        </div>` : ''}
+            let steps = st.steps;
+            
+            // '오기' 모드일 때는 안내 문구를 상황에 맞게 살짝 보정하여 표시
+            if (searchMode === 'in') {
+                content.innerHTML = `
+                    <div class="p-6 bg-blue-50 rounded-2xl border-2 border-blue-100 text-center mb-4">
+                        <p class="text-xl font-bold text-blue-800">${st.name}에서 열차를 타고<br>안내에 따라 구리역으로 오세요.</p>
                     </div>
-                </div>`;
-            }).join('');
+                    <p class="text-center text-gray-500 font-bold">※ 가는 길의 반대 순서로 오시면 됩니다.</p>
+                `;
+            } else {
+                content.innerHTML = steps.map((step, idx) => {
+                    let msg = step.msg;
+                    msg = msg.replace("내려서", "<span class='highlight-action'>내려서</span>");
+                    msg = msg.replace("갈아타세요", "<span class='highlight-action'>갈아타세요</span>");
+                    msg = msg.replace("내리세요", "<span class='highlight-action'>내리세요</span>");
+
+                    return `
+                    <div class="path-step">
+                        <div class="circle-num">${idx + 1}</div>
+                        <div class="space-y-1">
+                            <div class="flex items-center">
+                                <span class="line-badge line-${step.line ? step.line.toLowerCase() : 'default'}">${step.line || ''}</span>
+                                <span class="text-lg font-black text-gray-800">${step.station || st.name}</span>
+                            </div>
+                            <p class="action-text text-lg font-bold text-gray-700 leading-relaxed">${msg}</p>
+                            ${step.pos ? `
+                            <div class="inline-block mt-1 bg-green-50 px-3 py-1 rounded-lg border border-green-200">
+                                <p class="text-sm font-bold text-green-800">💡 빠른 환승 위치: <span class="text-red-600 underline">${step.pos}</span></p>
+                            </div>` : ''}
+                        </div>
+                    </div>`;
+                }).join('');
+            }
 
             updateFavoriteStar();
         }
@@ -425,7 +333,7 @@
             const index = favorites.findIndex(f => f.name === currentTarget.name);
             if (index > -1) favorites.splice(index, 1);
             else favorites.push(currentTarget);
-            localStorage.setItem('guri_mama_v16', JSON.stringify(favorites));
+            localStorage.setItem('guri_mama_final_local', JSON.stringify(favorites));
             updateFavoriteStar();
         }
 
@@ -445,8 +353,8 @@
             favorites.forEach(fav => {
                 const btn = document.createElement('button');
                 btn.className = "w-full bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-4 flex items-center justify-between shadow-sm active:bg-yellow-100";
-                btn.onclick = () => renderRoute(fav.data, fav.name);
-                btn.innerHTML = `<span class="text-lg font-bold text-gray-800">🏠 → ${formatStationName(fav.name)}</span> <span class="text-xl">➡️</span>`;
+                btn.onclick = () => { searchMode = 'out'; showRoute(fav); };
+                btn.innerHTML = `<span class="text-base font-bold text-gray-800">🏠 → ${fav.name}</span> <span class="text-xl">➡️</span>`;
                 container.appendChild(btn);
             });
         }
